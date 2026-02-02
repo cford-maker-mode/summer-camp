@@ -24,6 +24,7 @@ import {
   DirectionsCar as LogisticsIcon,
 } from "@mui/icons-material";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const DRAWER_WIDTH = 240;
@@ -54,11 +55,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const drawer = (
     <Box>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
-          🏕️ Camp Planner
-        </Typography>
-      </Toolbar>
+      <Box
+        sx={{
+          overflow: "hidden",
+          height: { xs: 56, sm: 64 },
+          position: "relative",
+        }}
+      >
+        <Image
+          src="/logo.jpg"
+          alt="Summer Camp Planner"
+          fill
+          style={{ objectFit: "cover", objectPosition: "center" }}
+          priority
+        />
+      </Box>
       <Divider />
       <List>
         {navItems.map((item) => (
