@@ -6,9 +6,9 @@ import { createTheme } from "@mui/material/styles";
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#1976d2", // Blue
-      light: "#42a5f5",
-      dark: "#1565c0",
+      main: "#5BA9A4", // Teal
+      light: "#7DBDB9",
+      dark: "#478985",
     },
     secondary: {
       main: "#ffc107", // Amber
@@ -32,16 +32,31 @@ const theme = createTheme({
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
+      fontFamily: '"Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif',
       fontSize: "2rem",
-      fontWeight: 500,
+      fontWeight: 700,
     },
     h2: {
+      fontFamily: '"Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif',
       fontSize: "1.5rem",
-      fontWeight: 500,
+      fontWeight: 700,
     },
     h3: {
+      fontFamily: '"Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif',
       fontSize: "1.25rem",
-      fontWeight: 500,
+      fontWeight: 700,
+    },
+    h4: {
+      fontFamily: '"Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontWeight: 700,
+    },
+    h5: {
+      fontFamily: '"Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontWeight: 700,
+    },
+    h6: {
+      fontFamily: '"Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontWeight: 700,
     },
   },
   shape: {

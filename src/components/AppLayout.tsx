@@ -126,7 +126,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: "#5BA9A4" }}>
             Summer Camp Planner
           </Typography>
           <Typography variant="body2" sx={{ ml: 2, color: "text.secondary" }}>
