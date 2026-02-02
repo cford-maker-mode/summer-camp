@@ -76,6 +76,11 @@ export default function CampsPage() {
     severity: "success",
   });
 
+  // Edit camp state
+  const [editCamp, setEditCamp] = useState<Camp | null>(null);
+  const [editForm, setEditForm] = useState<ScrapedCampData | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const SUMMER_ID = "summer-2026";
 
   // Load children from localStorage
@@ -191,6 +196,64 @@ export default function CampsPage() {
   function handleUpdateScrapedField(field: keyof ScrapedCampData, value: unknown) {
     if (!scrapedData) return;
     setScrapedData({ ...scrapedData, [field]: value });
+  }
+
+  // Edit camp handlers
+  function handleEditCamp(camp: Camp) {
+    setEditCamp(camp);
+    setEditForm({
+      url: camp.url || "",
+      name: camp.name,
+      location: camp.location,
+      address: camp.address,
+      cost: camp.cost,
+      costMax: camp.costMax,
+      costPer: camp.costPer,
+      ageMin: camp.ageMin,
+      ageMax: camp.ageMax,
+      gradeMin: camp.gradeMin,
+      gradeMax: camp.gradeMax,
+      signupDate: camp.signupDate,
+      overnight: camp.overnight,
+      dailyStartTime: camp.dailyStartTime,
+      dailyEndTime: camp.dailyEndTime,
+      benefits: camp.benefits,
+      notes: camp.notes,
+    });
+  }
+
+  function handleUpdateEditField(field: keyof ScrapedCampData, value: unknown) {
+    if (!editForm) return;
+    setEditForm({ ...editForm, [field]: value });
+  }
+
+  async function handleSaveEdit() {
+    if (!editCamp || !editForm) return;
+
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/camps/${editCamp.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        setSnackbar({ open: true, message: data.error || "Failed to save changes", severity: "error" });
+        return;
+      }
+
+      setEditCamp(null);
+      setEditForm(null);
+      setSnackbar({ open: true, message: "Camp updated successfully", severity: "success" });
+      loadCamps();
+    } catch {
+      setSnackbar({ open: true, message: "Failed to save changes", severity: "error" });
+    } finally {
+      setSavingEdit(false);
+    }
   }
 
   const sortedCamps = [...camps].sort((a, b) => {
@@ -637,7 +700,7 @@ export default function CampsPage() {
       ) : (
         <Stack spacing={2}>
           {sortedCamps.map((camp) => (
-            <CampCard key={camp.id} camp={camp} onAddToPlan={(c) => {
+            <CampCard key={camp.id} camp={camp} onEdit={handleEditCamp} onAddToPlan={(c) => {
               setAddToPlanCamp(c);
               // Default to 5-day session starting next Monday
               const today = new Date();
@@ -834,6 +897,209 @@ export default function CampsPage() {
         </DialogActions>
       </Dialog>
 
+      {/* Edit Camp Dialog */}
+      <Dialog
+        open={Boolean(editCamp)}
+        onClose={() => {
+          setEditCamp(null);
+          setEditForm(null);
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Edit Camp</DialogTitle>
+        <DialogContent>
+          {editForm && (
+            <Box sx={{ pt: 1 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Camp Name *"
+                    value={editForm.name || ""}
+                    onChange={(e) => handleUpdateEditField("name", e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Website URL"
+                    value={editForm.url || ""}
+                    onChange={(e) => handleUpdateEditField("url", e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LinkIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Location"
+                    value={editForm.location || ""}
+                    onChange={(e) => handleUpdateEditField("location", e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Address"
+                    value={editForm.address || ""}
+                    onChange={(e) => handleUpdateEditField("address", e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="Min Age"
+                    type="number"
+                    value={editForm.ageMin || ""}
+                    onChange={(e) => handleUpdateEditField("ageMin", parseInt(e.target.value) || undefined)}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="Max Age"
+                    type="number"
+                    value={editForm.ageMax || ""}
+                    onChange={(e) => handleUpdateEditField("ageMax", parseInt(e.target.value) || undefined)}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="Min Grade"
+                    type="number"
+                    placeholder="K=0"
+                    value={editForm.gradeMin ?? ""}
+                    onChange={(e) => handleUpdateEditField("gradeMin", e.target.value === "" ? undefined : parseInt(e.target.value))}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="Max Grade"
+                    type="number"
+                    value={editForm.gradeMax ?? ""}
+                    onChange={(e) => handleUpdateEditField("gradeMax", e.target.value === "" ? undefined : parseInt(e.target.value))}
+                  />
+                </Grid>
+                <Grid item xs={4} sm={2}>
+                  <TextField
+                    fullWidth
+                    label="Cost (min)"
+                    type="number"
+                    value={editForm.cost || ""}
+                    onChange={(e) => handleUpdateEditField("cost", parseInt(e.target.value) || undefined)}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={4} sm={2}>
+                  <TextField
+                    fullWidth
+                    label="Cost (max)"
+                    type="number"
+                    value={editForm.costMax || ""}
+                    onChange={(e) => handleUpdateEditField("costMax", parseInt(e.target.value) || undefined)}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={4} sm={2}>
+                  <FormControl fullWidth>
+                    <InputLabel>Per</InputLabel>
+                    <Select
+                      value={editForm.costPer || "week"}
+                      label="Per"
+                      onChange={(e) => handleUpdateEditField("costPer", e.target.value)}
+                    >
+                      <MenuItem value="week">Week</MenuItem>
+                      <MenuItem value="day">Day</MenuItem>
+                      <MenuItem value="session">Session</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Signup Opens"
+                    type="date"
+                    value={editForm.signupDate || ""}
+                    onChange={(e) => handleUpdateEditField("signupDate", e.target.value)}
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={editForm.overnight || false}
+                        onChange={(e) => handleUpdateEditField("overnight", e.target.checked)}
+                      />
+                    }
+                    label="Overnight camp"
+                  />
+                </Grid>
+                {!editForm.overnight && (
+                  <>
+                    <Grid item xs={6} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Start Time"
+                        type="time"
+                        value={editForm.dailyStartTime || ""}
+                        onChange={(e) => handleUpdateEditField("dailyStartTime", e.target.value)}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="End Time"
+                        type="time"
+                        value={editForm.dailyEndTime || ""}
+                        onChange={(e) => handleUpdateEditField("dailyEndTime", e.target.value)}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Grid>
+                  </>
+                )}
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Notes"
+                    value={editForm.notes || ""}
+                    onChange={(e) => handleUpdateEditField("notes", e.target.value)}
+                    multiline
+                    rows={2}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setEditCamp(null);
+            setEditForm(null);
+          }}>Cancel</Button>
+          <Button
+            variant="contained"
+            disabled={!editForm?.name || savingEdit}
+            onClick={handleSaveEdit}
+          >
+            {savingEdit ? "Saving..." : "Save Changes"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
@@ -851,7 +1117,7 @@ export default function CampsPage() {
   );
 }
 
-function CampCard({ camp, onAddToPlan }: { camp: Camp; onAddToPlan: (camp: Camp) => void }) {
+function CampCard({ camp, onAddToPlan, onEdit }: { camp: Camp; onAddToPlan: (camp: Camp) => void; onEdit: (camp: Camp) => void }) {
   const formatCost = () => {
     if (!camp.cost) return null;
     const per = camp.costPer || "week";
@@ -937,7 +1203,7 @@ function CampCard({ camp, onAddToPlan }: { camp: Camp; onAddToPlan: (camp: Camp)
             <Button size="small" variant="outlined" onClick={() => onAddToPlan(camp)}>
               Add to Plan
             </Button>
-            <IconButton size="small">
+            <IconButton size="small" onClick={() => onEdit(camp)}>
               <EditIcon />
             </IconButton>
           </Box>

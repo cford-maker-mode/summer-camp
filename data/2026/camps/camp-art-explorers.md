@@ -2,20 +2,21 @@
 id: camp-art-explorers
 name: Art Explorers
 location: Community Center
-address: 456 Main St, Seattle WA 98102
+address: '456 Main St, Seattle WA 98102'
 cost: 325
 costPer: week
-url: https://example.com/art-explorers
+url: 'https://example.com/art-explorers'
 ageMin: 6
 ageMax: 10
-signupDate: 2026-03-01
-dailyStartTime: "09:00"
-dailyEndTime: "15:00"
-benefits: ["Creative", "All Materials Included", "Small Groups"]
-# priority:                        # P1 post-MVP - must | nice | backup
-createdAt: 2026-02-01
-updatedAt: 2026-02-01
-# topic: Arts & Crafts
+signupDate: '2026-03-01'
+dailyStartTime: '09:00'
+dailyEndTime: '15:00'
+benefits:
+  - Creative
+  - All Materials Included
+  - Small Groups
+createdAt: 2026-02-01T00:00:00.000Z
+updatedAt: '2026-02-02'
 ---
 
 ## Notes
