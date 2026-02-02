@@ -363,15 +363,7 @@ export default function SignupTasksPage() {
           >
             View Summer Plan
           </Button>
-          <FormControlLabel
-            control={
-              <Checkbox 
-                checked={showCompleted} 
-                onChange={(e) => setShowCompleted(e.target.checked)} 
-              />
-            }
-            label="Show completed tasks"
-          />
+          
         </Paper>
       </Box>
     );
@@ -382,28 +374,6 @@ export default function SignupTasksPage() {
       <Typography variant="h4" sx={{ mb: 3 }}>
         Signup Tasks
       </Typography>
-
-      {/* Controls */}
-      <Paper sx={{ p: 2, mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-        <FormControlLabel
-          control={
-            <Checkbox 
-              checked={showCompleted} 
-              onChange={(e) => setShowCompleted(e.target.checked)} 
-            />
-          }
-          label="Show completed"
-        />
-        
-        <Button
-          variant="outlined"
-          startIcon={<Download />}
-          onClick={handleExportICS}
-          disabled={incompleteTasks.length === 0}
-        >
-          Export .ics
-        </Button>
-      </Paper>
 
       {/* Task groups */}
       <Paper sx={{ p: 2 }}>
@@ -564,8 +534,35 @@ function TaskCard({
   onUndo: () => void;
   showUndo?: boolean;
 }) {
+  function handleDownloadICS(task: SignupTask) {
+    const icsContent = generateICS([task]);
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${task.campName}-signup.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleAddGoogleCalendar(task: SignupTask) {
+    const start = task.signupDate.replace(/-/g, "");
+    const title = encodeURIComponent(`Signup: ${task.campName}`);
+    const details = encodeURIComponent(`Camp session: ${task.sessionStartDate} - ${task.sessionEndDate}${task.url ? `\nWebsite: ${task.url}` : ""}`);
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${start}&details=${details}`;
+    window.open(url, "_blank");
+  }
+
+  function handleAddOutlookCalendar(task: SignupTask) {
+    const start = task.signupDate.replace(/-/g, "");
+    const title = encodeURIComponent(`Signup: ${task.campName}`);
+    const details = encodeURIComponent(`Camp session: ${task.sessionStartDate} - ${task.sessionEndDate}${task.url ? `\nWebsite: ${task.url}` : ""}`);
+    const url = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&body=${details}&startdt=${task.signupDate}`;
+    window.open(url, "_blank");
+  }
   const urgency = getUrgency(task.signupDate);
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
+  const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
 
   const formatCost = () => {
     if (!camp?.cost) return null;
@@ -685,6 +682,13 @@ function TaskCard({
         )}
         <Button 
           size="small"
+          variant="outlined"
+          onClick={(e) => setCalendarAnchor(e.currentTarget)}
+        >
+          Add to Calendar
+        </Button>
+        <Button 
+          size="small"
           onClick={(e) => setPopoverAnchor(e.currentTarget)}
         >
           Camp details
@@ -699,6 +703,22 @@ function TaskCard({
           </MuiLink>
         )}
       </Box>
+
+      {/* Add to Calendar Popover */}
+      <Popover
+        open={Boolean(calendarAnchor)}
+        anchorEl={calendarAnchor}
+        onClose={() => setCalendarAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+      >
+        <Box sx={{ p: 2, minWidth: 220 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>Add to Calendar</Typography>
+          <Button fullWidth size="small" sx={{ mb: 1 }} onClick={() => handleAddGoogleCalendar(task)}>Add to Google Calendar</Button>
+          <Button fullWidth size="small" sx={{ mb: 1 }} onClick={() => handleAddOutlookCalendar(task)}>Add to Outlook Online</Button>
+          <Button fullWidth size="small" onClick={() => handleDownloadICS(task)}>Download .ics</Button>
+        </Box>
+      </Popover>
 
       {/* Camp Details Popover */}
       <Popover
