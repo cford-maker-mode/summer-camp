@@ -42,6 +42,12 @@ import {
   Delete,
   Edit,
   Close,
+  LocationOn,
+  AttachMoney,
+  Schedule,
+  Link as LinkIcon,
+  Person,
+  NightsStay,
 } from "@mui/icons-material";
 import type { FamilyEvent, ScheduledSession, EventType, SessionStatus } from "@/types/summer";
 import type { Camp } from "@/types/camp";
@@ -123,7 +129,7 @@ export default function SummerPlanPage() {
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [detailPopover, setDetailPopover] = useState<{
     anchorEl: HTMLElement | null;
-    item: (FamilyEvent & { type: "event" }) | (ScheduledSession & { type: "session"; campName: string }) | null;
+    item: (FamilyEvent & { type: "event" }) | (ScheduledSession & { type: "session"; camp: Camp | null }) | null;
   }>({ anchorEl: null, item: null });
   const [dateMenu, setDateMenu] = useState<{
     anchorEl: HTMLElement | null;
@@ -409,11 +415,11 @@ export default function SummerPlanPage() {
       }
     } else {
       const session = sessions.find(s => s.id === itemId);
-      const camp = camps.find(c => c.id === session?.campId);
+      const camp = camps.find(c => c.id === session?.campId) || null;
       if (session) {
         setDetailPopover({ 
           anchorEl: e.currentTarget, 
-          item: { ...session, type: "session", campName: camp?.name || "Unknown Camp" } 
+          item: { ...session, type: "session", camp } 
         });
       }
     }
@@ -673,19 +679,19 @@ export default function SummerPlanPage() {
         transformOrigin={{ vertical: "top", horizontal: "left" }}
       >
         {detailPopover.item && (
-          <Box sx={{ p: 2, minWidth: 280 }}>
+          <Box sx={{ p: 2, minWidth: 320, maxWidth: 400 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
               <Typography variant="subtitle1" fontWeight="medium">
                 {detailPopover.item.type === "event" 
                   ? (detailPopover.item as FamilyEvent).name 
-                  : (detailPopover.item as ScheduledSession & { campName: string }).campName}
+                  : (detailPopover.item as ScheduledSession & { camp: Camp | null }).camp?.name || "Unknown Camp"}
               </Typography>
               <IconButton size="small" onClick={() => setDetailPopover({ anchorEl: null, item: null })}>
                 <Close fontSize="small" />
               </IconButton>
             </Box>
             
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {formatDate(detailPopover.item.startDate)} - {formatDate(detailPopover.item.endDate)}
             </Typography>
             
@@ -693,32 +699,143 @@ export default function SummerPlanPage() {
               <Chip 
                 label={(detailPopover.item as FamilyEvent).eventType} 
                 size="small" 
-                sx={{ mb: 1, textTransform: "capitalize" }} 
+                sx={{ mb: 2, textTransform: "capitalize" }} 
               />
             )}
             
-            {detailPopover.item.type === "session" && (
-              <Box sx={{ mb: 1 }}>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={(detailPopover.item as ScheduledSession).status}
-                    label="Status"
-                    onChange={(e) => handleUpdateSessionStatus(
-                      detailPopover.item!.id, 
-                      e.target.value as SessionStatus
+            {detailPopover.item.type === "session" && (() => {
+              const sessionItem = detailPopover.item as ScheduledSession & { camp: Camp | null };
+              const camp = sessionItem.camp;
+              
+              const formatCost = () => {
+                if (!camp?.cost) return null;
+                const per = camp.costPer || "week";
+                if (camp.costMax && camp.costMax !== camp.cost) {
+                  return `$${camp.cost}-$${camp.costMax}/${per}`;
+                }
+                return `$${camp.cost}/${per}`;
+              };
+
+              const formatEligibility = () => {
+                const parts: string[] = [];
+                if (camp?.ageMin || camp?.ageMax) {
+                  if (camp.ageMin && camp.ageMax) parts.push(`Ages ${camp.ageMin}-${camp.ageMax}`);
+                  else if (camp.ageMin) parts.push(`Ages ${camp.ageMin}+`);
+                  else parts.push(`Up to age ${camp.ageMax}`);
+                }
+                if (camp?.gradeMin !== undefined || camp?.gradeMax !== undefined) {
+                  const formatGrade = (g: number) => g === 0 ? "K" : g.toString();
+                  if (camp.gradeMin !== undefined && camp.gradeMax !== undefined) {
+                    if (camp.gradeMin === camp.gradeMax) parts.push(`Grade ${formatGrade(camp.gradeMin)}`);
+                    else parts.push(`Grades ${formatGrade(camp.gradeMin)}-${formatGrade(camp.gradeMax)}`);
+                  } else if (camp.gradeMin !== undefined) {
+                    parts.push(`Grade ${formatGrade(camp.gradeMin)}+`);
+                  } else {
+                    parts.push(`Up to grade ${formatGrade(camp.gradeMax!)}`);
+                  }
+                }
+                return parts.length > 0 ? parts.join(" • ") : null;
+              };
+
+              const formatTime = () => {
+                if (camp?.overnight) return "Overnight";
+                if (camp?.dailyStartTime && camp?.dailyEndTime) {
+                  const formatT = (t: string) => {
+                    const [h, m] = t.split(":");
+                    const hour = parseInt(h);
+                    const ampm = hour >= 12 ? "PM" : "AM";
+                    const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                    return `${h12}:${m} ${ampm}`;
+                  };
+                  return `${formatT(camp.dailyStartTime)} - ${formatT(camp.dailyEndTime)}`;
+                }
+                return null;
+              };
+
+              return (
+                <>
+                  {/* Camp Details */}
+                  <Box sx={{ mb: 2 }}>
+                    {camp?.location && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                        <LocationOn fontSize="small" color="action" />
+                        <Typography variant="body2">{camp.location}</Typography>
+                      </Box>
                     )}
-                  >
-                    <MenuItem value="planned">Planned</MenuItem>
-                    <MenuItem value="confirmed">Confirmed</MenuItem>
-                    <MenuItem value="waitlisted">Waitlisted</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            )}
+                    {camp?.address && !camp?.location && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                        <LocationOn fontSize="small" color="action" />
+                        <Typography variant="body2">{camp.address}</Typography>
+                      </Box>
+                    )}
+                    {formatCost() && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                        <AttachMoney fontSize="small" color="action" />
+                        <Typography variant="body2">{formatCost()}</Typography>
+                      </Box>
+                    )}
+                    {formatEligibility() && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                        <Person fontSize="small" color="action" />
+                        <Typography variant="body2">{formatEligibility()}</Typography>
+                      </Box>
+                    )}
+                    {formatTime() && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                        {camp?.overnight ? <NightsStay fontSize="small" color="action" /> : <Schedule fontSize="small" color="action" />}
+                        <Typography variant="body2">{formatTime()}</Typography>
+                      </Box>
+                    )}
+                    {camp?.url && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                        <LinkIcon fontSize="small" color="action" />
+                        <Typography 
+                          variant="body2" 
+                          component="a" 
+                          href={camp.url} 
+                          target="_blank" 
+                          rel="noopener"
+                          sx={{ color: "primary.main", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+                        >
+                          {new URL(camp.url).hostname}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Benefits/Tags */}
+                  {camp?.benefits && camp.benefits.length > 0 && (
+                    <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {camp.benefits.map((benefit, i) => (
+                        <Chip key={i} label={benefit} size="small" variant="outlined" />
+                      ))}
+                    </Box>
+                  )}
+
+                  {/* Status Selector */}
+                  <Box sx={{ mb: 1 }}>
+                    <FormControl size="small" fullWidth>
+                      <InputLabel>Status</InputLabel>
+                      <Select
+                        value={sessionItem.status}
+                        label="Status"
+                        onChange={(e) => handleUpdateSessionStatus(
+                          detailPopover.item!.id, 
+                          e.target.value as SessionStatus
+                        )}
+                      >
+                        <MenuItem value="planned">Planned</MenuItem>
+                        <MenuItem value="confirmed">Confirmed</MenuItem>
+                        <MenuItem value="waitlisted">Waitlisted</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </>
+              );
+            })()}
             
             {detailPopover.item.notes && (
-              <Typography variant="body2" sx={{ mb: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: "italic" }}>
                 {detailPopover.item.notes}
               </Typography>
             )}

@@ -25,6 +25,8 @@ import {
   RadioGroup,
   Radio,
   Link as MuiLink,
+  Popover,
+  IconButton,
 } from "@mui/material";
 import {
   Warning,
@@ -34,6 +36,12 @@ import {
   Download,
   Undo,
   OpenInNew,
+  Close,
+  LocationOn,
+  AttachMoney,
+  Person,
+  NightsStay,
+  Link as LinkIcon,
 } from "@mui/icons-material";
 import Link from "next/link";
 import type { ScheduledSession, SessionStatus, UrgencyLevel, SignupTask } from "@/types/summer";
@@ -412,7 +420,8 @@ export default function SignupTasksPage() {
             {completedTasks.map(task => (
               <TaskCard 
                 key={task.id} 
-                task={task} 
+                task={task}
+                camp={camps.find(c => c.id === task.campId) || null}
                 onMarkDone={() => {}} 
                 onUndo={() => handleUndo(task)}
                 showUndo
@@ -444,7 +453,8 @@ export default function SignupTasksPage() {
               {urgencyTasks.map(task => (
                 <TaskCard 
                   key={task.id} 
-                  task={task} 
+                  task={task}
+                  camp={camps.find(c => c.id === task.campId) || null}
                   onMarkDone={() => setCompleteDialog({ open: true, task, updateStatus: true })}
                   onUndo={() => {}}
                 />
@@ -543,16 +553,64 @@ export default function SignupTasksPage() {
 // Task Card Component
 function TaskCard({ 
   task, 
+  camp,
   onMarkDone, 
   onUndo,
   showUndo = false 
 }: { 
-  task: SignupTask; 
+  task: SignupTask;
+  camp: Camp | null;
   onMarkDone: () => void;
   onUndo: () => void;
   showUndo?: boolean;
 }) {
   const urgency = getUrgency(task.signupDate);
+  const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
+
+  const formatCost = () => {
+    if (!camp?.cost) return null;
+    const per = camp.costPer || "week";
+    if (camp.costMax && camp.costMax !== camp.cost) {
+      return `$${camp.cost}-$${camp.costMax}/${per}`;
+    }
+    return `$${camp.cost}/${per}`;
+  };
+
+  const formatEligibility = () => {
+    const parts: string[] = [];
+    if (camp?.ageMin || camp?.ageMax) {
+      if (camp.ageMin && camp.ageMax) parts.push(`Ages ${camp.ageMin}-${camp.ageMax}`);
+      else if (camp.ageMin) parts.push(`Ages ${camp.ageMin}+`);
+      else parts.push(`Up to age ${camp.ageMax}`);
+    }
+    if (camp?.gradeMin !== undefined || camp?.gradeMax !== undefined) {
+      const formatGrade = (g: number) => g === 0 ? "K" : g.toString();
+      if (camp.gradeMin !== undefined && camp.gradeMax !== undefined) {
+        if (camp.gradeMin === camp.gradeMax) parts.push(`Grade ${formatGrade(camp.gradeMin)}`);
+        else parts.push(`Grades ${formatGrade(camp.gradeMin)}-${formatGrade(camp.gradeMax)}`);
+      } else if (camp.gradeMin !== undefined) {
+        parts.push(`Grade ${formatGrade(camp.gradeMin)}+`);
+      } else {
+        parts.push(`Up to grade ${formatGrade(camp.gradeMax!)}`);
+      }
+    }
+    return parts.length > 0 ? parts.join(" • ") : null;
+  };
+
+  const formatTime = () => {
+    if (camp?.overnight) return "Overnight";
+    if (camp?.dailyStartTime && camp?.dailyEndTime) {
+      const formatT = (t: string) => {
+        const [h, m] = t.split(":");
+        const hour = parseInt(h);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        return `${h12}:${m} ${ampm}`;
+      };
+      return `${formatT(camp.dailyStartTime)} - ${formatT(camp.dailyEndTime)}`;
+    }
+    return null;
+  };
   
   return (
     <Box 
@@ -569,12 +627,6 @@ function TaskCard({
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <Box sx={{ flex: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-            <Checkbox 
-              checked={task.complete}
-              onChange={task.complete ? onUndo : onMarkDone}
-              disabled={false}
-              sx={{ p: 0, mr: 0.5 }}
-            />
             <Typography 
               variant="subtitle1" 
               fontWeight="medium"
@@ -584,14 +636,14 @@ function TaskCard({
             </Typography>
           </Box>
           
-          <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+          <Typography variant="body2" color="text.secondary">
             {task.complete 
               ? `Done ${formatDate(task.signupDate)}` 
               : `Signup ${urgency === "overdue" ? "was" : "opens"} ${formatFullDate(task.signupDate)} (${getRelativeDate(task.signupDate)})`
             }
           </Typography>
           
-          <Box sx={{ ml: 4, display: "flex", alignItems: "center", gap: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <Typography variant="body2" color="text.secondary" component="span">
               Session: {formatDate(task.sessionStartDate)} - {formatDate(task.sessionEndDate)}
             </Typography>
@@ -620,7 +672,7 @@ function TaskCard({
         </Box>
       </Box>
       
-      <Box sx={{ display: "flex", gap: 1, mt: 1.5, ml: 4 }}>
+      <Box sx={{ display: "flex", gap: 1, mt: 1.5 }}>
         {showUndo && task.complete && (
           <Button size="small" startIcon={<Undo />} onClick={onUndo}>
             Undo
@@ -632,11 +684,10 @@ function TaskCard({
           </Button>
         )}
         <Button 
-          component={Link}
-          href="/camps"
           size="small"
+          onClick={(e) => setPopoverAnchor(e.currentTarget)}
         >
-          View Camp
+          Camp details
         </Button>
         {task.url && (
           <MuiLink 
@@ -648,6 +699,97 @@ function TaskCard({
           </MuiLink>
         )}
       </Box>
+
+      {/* Camp Details Popover */}
+      <Popover
+        open={Boolean(popoverAnchor)}
+        anchorEl={popoverAnchor}
+        onClose={() => setPopoverAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+      >
+        <Box sx={{ p: 2, minWidth: 320, maxWidth: 400 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight="medium">
+              {camp?.name || task.campName}
+            </Typography>
+            <IconButton size="small" onClick={() => setPopoverAnchor(null)}>
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
+
+          {/* Camp Details */}
+          <Box sx={{ mb: 2 }}>
+            {camp?.location && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <LocationOn fontSize="small" color="action" />
+                <Typography variant="body2">{camp.location}</Typography>
+              </Box>
+            )}
+            {camp?.address && !camp?.location && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <LocationOn fontSize="small" color="action" />
+                <Typography variant="body2">{camp.address}</Typography>
+              </Box>
+            )}
+            {formatCost() && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <AttachMoney fontSize="small" color="action" />
+                <Typography variant="body2">{formatCost()}</Typography>
+              </Box>
+            )}
+            {formatEligibility() && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <Person fontSize="small" color="action" />
+                <Typography variant="body2">{formatEligibility()}</Typography>
+              </Box>
+            )}
+            {formatTime() && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                {camp?.overnight ? <NightsStay fontSize="small" color="action" /> : <Schedule fontSize="small" color="action" />}
+                <Typography variant="body2">{formatTime()}</Typography>
+              </Box>
+            )}
+            {camp?.url && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <LinkIcon fontSize="small" color="action" />
+                <Typography 
+                  variant="body2" 
+                  component="a" 
+                  href={camp.url} 
+                  target="_blank" 
+                  rel="noopener"
+                  sx={{ color: "primary.main", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+                >
+                  {new URL(camp.url).hostname}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+
+          {/* Benefits/Tags */}
+          {camp?.benefits && camp.benefits.length > 0 && (
+            <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+              {camp.benefits.map((benefit, i) => (
+                <Chip key={i} label={benefit} size="small" variant="outlined" />
+              ))}
+            </Box>
+          )}
+
+          {/* Notes */}
+          {camp?.notes && (
+            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
+              {camp.notes}
+            </Typography>
+          )}
+
+          {!camp && (
+            <Typography variant="body2" color="text.secondary">
+              Camp details not available
+            </Typography>
+          )}
+        </Box>
+      </Popover>
     </Box>
   );
 }
