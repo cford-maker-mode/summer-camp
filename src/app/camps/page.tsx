@@ -22,7 +22,15 @@ import {
   Stack,
   Checkbox,
   FormControlLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  RadioGroup,
+  Radio,
+  Snackbar,
 } from "@mui/material";
+import type { SessionStatus } from "@/types/summer";
 import {
   Add as AddIcon,
   ExpandMore as ExpandMoreIcon,
@@ -46,6 +54,23 @@ export default function CampsPage() {
   const [saving, setSaving] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<"rank" | "name" | "signup">("rank");
+
+  // Add to Plan state
+  const [addToPlanCamp, setAddToPlanCamp] = useState<Camp | null>(null);
+  const [addToPlanForm, setAddToPlanForm] = useState({
+    startDate: "",
+    endDate: "",
+    status: "planned" as SessionStatus,
+    notes: "",
+  });
+  const [addingToPlan, setAddingToPlan] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const SUMMER_ID = "summer-2026-emma";
 
   // Load camps on mount
   useEffect(() => {
@@ -596,7 +621,21 @@ export default function CampsPage() {
       ) : (
         <Stack spacing={2}>
           {sortedCamps.map((camp) => (
-            <CampCard key={camp.id} camp={camp} />
+            <CampCard key={camp.id} camp={camp} onAddToPlan={(c) => {
+              setAddToPlanCamp(c);
+              // Default to 5-day session starting next Monday
+              const today = new Date();
+              const nextMonday = new Date(today);
+              nextMonday.setDate(today.getDate() + ((8 - today.getDay()) % 7 || 7));
+              const friday = new Date(nextMonday);
+              friday.setDate(nextMonday.getDate() + 4);
+              setAddToPlanForm({
+                startDate: nextMonday.toISOString().split("T")[0],
+                endDate: friday.toISOString().split("T")[0],
+                status: "planned",
+                notes: "",
+              });
+            }} />
           ))}
         </Stack>
       )}
@@ -609,11 +648,127 @@ export default function CampsPage() {
           </Typography>
         </Box>
       )}
+
+      {/* Add to Plan Dialog */}
+      <Dialog
+        open={Boolean(addToPlanCamp)}
+        onClose={() => setAddToPlanCamp(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add to Summer Plan</DialogTitle>
+        <DialogContent>
+          {addToPlanCamp && (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+              <Typography variant="subtitle1" fontWeight="medium">
+                {addToPlanCamp.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {addToPlanCamp.location}
+              </Typography>
+
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <TextField
+                  label="Start Date"
+                  type="date"
+                  value={addToPlanForm.startDate}
+                  onChange={(e) => setAddToPlanForm(prev => ({ ...prev, startDate: e.target.value }))}
+                  required
+                  fullWidth
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+                <TextField
+                  label="End Date"
+                  type="date"
+                  value={addToPlanForm.endDate}
+                  onChange={(e) => setAddToPlanForm(prev => ({ ...prev, endDate: e.target.value }))}
+                  required
+                  fullWidth
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+              </Box>
+
+              <FormControl>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Status</Typography>
+                <RadioGroup
+                  row
+                  value={addToPlanForm.status}
+                  onChange={(e) => setAddToPlanForm(prev => ({ ...prev, status: e.target.value as SessionStatus }))}
+                >
+                  <FormControlLabel value="planned" control={<Radio />} label="Planned" />
+                  <FormControlLabel value="confirmed" control={<Radio />} label="Confirmed" />
+                </RadioGroup>
+              </FormControl>
+
+              <TextField
+                label="Notes (optional)"
+                value={addToPlanForm.notes}
+                onChange={(e) => setAddToPlanForm(prev => ({ ...prev, notes: e.target.value }))}
+                multiline
+                rows={2}
+                fullWidth
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddToPlanCamp(null)}>Cancel</Button>
+          <Button
+            variant="contained"
+            disabled={!addToPlanForm.startDate || !addToPlanForm.endDate || addingToPlan}
+            onClick={async () => {
+              if (!addToPlanCamp) return;
+              setAddingToPlan(true);
+              try {
+                const res = await fetch(`/api/summers/${SUMMER_ID}/sessions`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    campId: addToPlanCamp.id,
+                    ...addToPlanForm,
+                  }),
+                });
+                if (!res.ok) throw new Error("Failed to add session");
+                setSnackbar({
+                  open: true,
+                  message: `${addToPlanCamp.name} added to Summer Plan`,
+                  severity: "success",
+                });
+                setAddToPlanCamp(null);
+              } catch {
+                setSnackbar({
+                  open: true,
+                  message: "Failed to add to plan",
+                  severity: "error",
+                });
+              } finally {
+                setAddingToPlan(false);
+              }
+            }}
+          >
+            {addingToPlan ? "Adding..." : "Add to Plan"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
 
-function CampCard({ camp }: { camp: Camp }) {
+function CampCard({ camp, onAddToPlan }: { camp: Camp; onAddToPlan: (camp: Camp) => void }) {
   const formatCost = () => {
     if (!camp.cost) return null;
     const per = camp.costPer || "week";
@@ -711,7 +866,7 @@ function CampCard({ camp }: { camp: Camp }) {
           </Box>
 
           <Box sx={{ display: "flex", gap: 1 }}>
-            <Button size="small" variant="outlined">
+            <Button size="small" variant="outlined" onClick={() => onAddToPlan(camp)}>
               Add to Plan
             </Button>
             <IconButton size="small">

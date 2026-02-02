@@ -43,8 +43,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Dashboard", icon: <DashboardIcon />, href: "/dashboard", disabled: true, phase: "P2" },
   { label: "Camps", icon: <CampsIcon />, href: "/camps" },
-  { label: "Summer Plan", icon: <CalendarIcon />, href: "/plan", disabled: true, phase: "Soon" },
-  { label: "Signup Tasks", icon: <SignupIcon />, href: "/signups", disabled: true, phase: "Soon" },
+  { label: "Summer Plan", icon: <CalendarIcon />, href: "/plan" },
+  { label: "Signup Tasks", icon: <SignupIcon />, href: "/signup-tasks" },
   { label: "Logistics", icon: <LogisticsIcon />, href: "/logistics", disabled: true, phase: "P2" },
 ];
 

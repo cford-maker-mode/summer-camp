@@ -58,14 +58,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ScrapeRes
         success: true,
         data: data,
         warning: "Limited data extracted. This site may use JavaScript to load content. Try a different URL or enter details manually.",
-        confidence: result.confidence,
+        confidence: result.extractionConfidence,
       });
     }
 
     return NextResponse.json({
       success: true,
       data: result.data,
-      confidence: result.confidence,
+      confidence: result.extractionConfidence,
     });
   } catch (error) {
     console.error("[API] Scrape error:", error);
