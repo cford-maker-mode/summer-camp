@@ -19,10 +19,10 @@ function toDateString(val: unknown): string | undefined {
 }
 
 function getSessionsDir(summerId: string): string {
+  // summerId format: summer-2026 -> folder: summer
   const parts = summerId.split("-");
   const year = parts[1] || "2026";
-  const childId = parts.slice(2).join("-");
-  return path.join(process.cwd(), "data", year, `summer-${childId}`, "sessions");
+  return path.join(process.cwd(), "data", year, "summer", "sessions");
 }
 
 export async function GET(
@@ -56,6 +56,7 @@ export async function GET(
         startDate: toDateString(data.startDate) || "",
         endDate: toDateString(data.endDate) || "",
         status: (data.status as SessionStatus) || "planned",
+        childName: data.childName || undefined,
         backupSessionId: data.backupSessionId,
         signupTaskComplete: data.signupTaskComplete === true,
         notes: body.trim() || undefined,
@@ -106,7 +107,7 @@ export async function POST(
     const { summerId } = await params;
     const body = await request.json();
     
-    const { campId, startDate, endDate, status, notes } = body;
+    const { campId, startDate, endDate, status, childName, notes } = body;
     
     if (!campId || !startDate || !endDate) {
       return NextResponse.json(
@@ -130,6 +131,7 @@ export async function POST(
       startDate,
       endDate,
       status: status || "planned",
+      childName: childName || undefined,
       signupTaskComplete: false,
       createdAt: today,
       updatedAt: today,
@@ -142,7 +144,7 @@ summerId: ${frontmatter.summerId}
 startDate: ${frontmatter.startDate}
 endDate: ${frontmatter.endDate}
 status: ${frontmatter.status}
-signupTaskComplete: ${frontmatter.signupTaskComplete}
+${childName ? `childName: ${childName}\n` : ""}signupTaskComplete: ${frontmatter.signupTaskComplete}
 createdAt: ${frontmatter.createdAt}
 updatedAt: ${frontmatter.updatedAt}
 ---

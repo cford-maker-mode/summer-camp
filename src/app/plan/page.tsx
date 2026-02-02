@@ -102,7 +102,7 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const SUMMER_ID = "summer-2026-emma"; // Default summer for now
+const SUMMER_ID = "summer-2026";
 
 export default function SummerPlanPage() {
   const [currentYear, setCurrentYear] = useState(2026);
@@ -130,6 +130,11 @@ export default function SummerPlanPage() {
     date: string | null;
   }>({ anchorEl: null, date: null });
   
+  // Children state (persisted to localStorage)
+  const [children, setChildren] = useState<string[]>([]);
+  const [newChildName, setNewChildName] = useState("");
+  const [showAddChild, setShowAddChild] = useState(false);
+
   // Form state
   const [eventForm, setEventForm] = useState({
     name: "",
@@ -143,6 +148,7 @@ export default function SummerPlanPage() {
     startDate: "",
     endDate: "",
     status: "planned" as SessionStatus,
+    childName: "",
     notes: "",
   });
 
@@ -180,6 +186,22 @@ export default function SummerPlanPage() {
     loadData();
   }, [loadData]);
 
+  // Load children from localStorage
+  useEffect(() => {
+    const savedChildren = localStorage.getItem("summerCampChildren");
+    if (savedChildren) {
+      setChildren(JSON.parse(savedChildren));
+    }
+  }, []);
+
+  // Save children to localStorage when updated
+  const addChild = (name: string) => {
+    if (name.trim() && !children.includes(name.trim())) {
+      const updated = [...children, name.trim()];
+      setChildren(updated);
+      localStorage.setItem("summerCampChildren", JSON.stringify(updated));
+    }
+  };
   // Navigate months
   const prevMonth = () => {
     if (currentMonth === 0) {
@@ -236,7 +258,9 @@ export default function SummerPlanPage() {
         severity: "success" 
       });
       setSessionDialogOpen(false);
-      setSessionForm({ campId: "", startDate: "", endDate: "", status: "planned", notes: "" });
+      setSessionForm({ campId: "", startDate: "", endDate: "", status: "planned", childName: "", notes: "" });
+      setShowAddChild(false);
+      setNewChildName("");
       loadData();
     } catch {
       setSnackbar({ open: true, message: "Failed to create session", severity: "error" });
@@ -796,7 +820,11 @@ export default function SummerPlanPage() {
       {/* Add Camp Session Dialog */}
       <Dialog 
         open={sessionDialogOpen} 
-        onClose={() => setSessionDialogOpen(false)}
+        onClose={() => {
+          setSessionDialogOpen(false);
+          setShowAddChild(false);
+          setNewChildName("");
+        }}
         maxWidth="sm"
         fullWidth
       >
@@ -822,6 +850,68 @@ export default function SummerPlanPage() {
                 ))}
               </Select>
             </FormControl>
+
+            {/* Child selector */}
+            <FormControl fullWidth>
+              <InputLabel>Child (optional)</InputLabel>
+              <Select
+                value={sessionForm.childName}
+                label="Child (optional)"
+                onChange={(e) => {
+                  if (e.target.value === "__add_new__") {
+                    setShowAddChild(true);
+                  } else {
+                    setSessionForm(prev => ({ ...prev, childName: e.target.value }));
+                  }
+                }}
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {children.map(child => (
+                  <MenuItem key={child} value={child}>{child}</MenuItem>
+                ))}
+                <MenuItem value="__add_new__" sx={{ color: "primary.main" }}>
+                  <Add sx={{ mr: 1, fontSize: 18 }} /> Add new child...
+                </MenuItem>
+              </Select>
+            </FormControl>
+
+            {showAddChild && (
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <TextField
+                  label="New child name"
+                  value={newChildName}
+                  onChange={(e) => setNewChildName(e.target.value)}
+                  size="small"
+                  fullWidth
+                  autoFocus
+                />
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    if (newChildName.trim()) {
+                      addChild(newChildName.trim());
+                      setSessionForm(prev => ({ ...prev, childName: newChildName.trim() }));
+                      setNewChildName("");
+                      setShowAddChild(false);
+                    }
+                  }}
+                >
+                  Add
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setShowAddChild(false);
+                    setNewChildName("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Box>
+            )}
             
             <Box sx={{ display: "flex", gap: 2 }}>
               <TextField

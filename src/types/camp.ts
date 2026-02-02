@@ -29,7 +29,6 @@ export interface Camp {
   dailyStartTime?: string; // HH:MM format (24-hour)
   dailyEndTime?: string; // HH:MM format (24-hour)
   benefits?: string[];
-  rank?: number;
   notes?: string;
   createdAt: string; // YYYY-MM-DD format
   updatedAt: string; // YYYY-MM-DD format
@@ -78,6 +77,7 @@ export interface ScrapeResult {
   data?: ScrapedCampData;
   error?: string;
   extractionConfidence?: number; // 0-1 confidence score from LLM
+  blocked?: boolean; // True if site appears to block automated requests
 }
 
 /**
@@ -94,4 +94,5 @@ export interface ScrapeResponse {
   success: boolean;
   data?: ScrapedCampData;
   error?: string;
+  blocked?: boolean; // True if site appears to block automated requests
 }

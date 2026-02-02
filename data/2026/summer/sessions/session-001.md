@@ -1,7 +1,7 @@
 ---
 id: session-001
 campId: camp-robotics-academy
-summerId: summer-2026-emma
+summerId: summer-2026
 startDate: 2026-06-15
 endDate: 2026-06-19
 status: planned

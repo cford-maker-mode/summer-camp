@@ -12,7 +12,7 @@ signupDate: 2026-02-15
 dailyStartTime: "09:00"
 dailyEndTime: "16:00"
 benefits: ["Full Day", "STEM Focus", "Kid's Choice"]
-rank: 1
+# priority:                        # P1 post-MVP - must | nice | backup
 createdAt: 2026-02-01
 updatedAt: 2026-02-01
 # topic: STEM / Engineering

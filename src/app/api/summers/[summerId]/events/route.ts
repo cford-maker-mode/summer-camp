@@ -20,11 +20,10 @@ function toDateString(val: unknown): string | undefined {
 }
 
 function getEventsDir(summerId: string): string {
-  // summerId format: summer-2026-emma -> folder: summer-emma
+  // summerId format: summer-2026 -> folder: summer
   const parts = summerId.split("-");
   const year = parts[1] || "2026";
-  const childId = parts.slice(2).join("-");
-  return path.join(process.cwd(), "data", year, `summer-${childId}`, "events");
+  return path.join(process.cwd(), "data", year, "summer", "events");
 }
 
 export async function GET(

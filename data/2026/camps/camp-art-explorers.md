@@ -12,7 +12,7 @@ signupDate: 2026-03-01
 dailyStartTime: "09:00"
 dailyEndTime: "15:00"
 benefits: ["Creative", "All Materials Included", "Small Groups"]
-rank: 2
+# priority:                        # P1 post-MVP - must | nice | backup
 createdAt: 2026-02-01
 updatedAt: 2026-02-01
 # topic: Arts & Crafts

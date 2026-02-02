@@ -43,7 +43,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ScrapeRes
 
     if (!result.success) {
       return NextResponse.json(
-        { success: false, error: result.error },
+        { success: false, error: result.error, blocked: result.blocked },
         { status: 422 }
       );
     }

@@ -1,7 +1,7 @@
 ---
 id: session-003
 campId: camp-camp-orkila
-summerId: summer-2026-emma
+summerId: summer-2026
 startDate: 2026-07-11
 endDate: 2026-07-17
 status: planned

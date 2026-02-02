@@ -13,8 +13,7 @@ import type { SessionStatus } from "@/types/summer";
 function getSessionsDir(summerId: string): string {
   const parts = summerId.split("-");
   const year = parts[1] || "2026";
-  const childId = parts.slice(2).join("-");
-  return path.join(process.cwd(), "data", year, `summer-${childId}`, "sessions");
+  return path.join(process.cwd(), "data", year, "summer", "sessions");
 }
 
 export async function PATCH(

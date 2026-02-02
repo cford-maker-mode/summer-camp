@@ -12,7 +12,7 @@ signupDate: 2026-01-30
 dailyStartTime: "08:00"
 dailyEndTime: "17:00"
 benefits: ["Outdoor", "Nature Skills", "Team Building", "Full Day"]
-rank: 3
+# priority:                        # P1 post-MVP - must | nice | backup
 createdAt: 2026-02-01
 updatedAt: 2026-02-01
 # topic: Outdoor / Nature

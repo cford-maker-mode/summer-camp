@@ -50,6 +50,7 @@ export interface ScheduledSession {
   startDate: string; // YYYY-MM-DD format
   endDate: string; // YYYY-MM-DD format
   status: SessionStatus;
+  childName?: string; // Optional child name for the session
   backupSessionId?: string;
   signupTaskComplete: boolean;
   notes?: string;

@@ -1,7 +1,7 @@
 ---
 id: session-002
 campId: camp-art-explorers
-summerId: summer-2026-emma
+summerId: summer-2026
 startDate: 2026-06-28
 endDate: 2026-06-30
 status: planned

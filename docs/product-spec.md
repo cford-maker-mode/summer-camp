@@ -131,7 +131,7 @@ Replace months of spreadsheet wrangling and calendar juggling with a purpose-bui
 | P0 | Family events | Add vacations and blocked time as scheduling anchors | Michelle | Yes |
 | P0 | Planned vs Confirmed status | Track tentative vs committed activities | Michelle | Yes |
 | P0 | Signup deadline tracking | Record enrollment open dates; surface upcoming deadlines | Michelle | Yes |
-| P1 | Stack ranking | Prioritize camps by preference | Michelle | Yes |
+| P1 | Priority tiers | Categorize camps as Must-Have, Nice-to-Have, or Backup | Michelle | No |
 | P1 | Waitlist tracking | Mark camps as waitlisted; link backup options | Michelle | Yes |
 | P1 | Calendar export | Push signup reminders to Google/Outlook calendar | Michelle | Yes |
 | P1 | Camp categorization | Add topic/category to camps (STEM, Creative, Outdoor, etc.) | Michelle | No |
@@ -201,14 +201,14 @@ Replace months of spreadsheet wrangling and calendar juggling with a purpose-bui
 | **Priority** | P0 |
 | **Estimate** | S |
 
-#### Story 7.1.4: Stack Rank Camps
+#### Story 7.1.4: Priority Tiers (Post-MVP)
 | Field | Value |
 |-------|-------|
 | **As a** | Planning Parent |
-| **I want to** | assign priority/rank to camps |
-| **So that** | I know which to sign up for first |
-| **Acceptance Criteria** | <ul><li>[ ] Can assign numeric rank or drag to reorder</li><li>[ ] Catalog can sort by rank</li></ul> |
-| **Priority** | P1 |
+| **I want to** | categorize camps by priority tier |
+| **So that** | I know which camps to pursue first and which are backups |
+| **Acceptance Criteria** | <ul><li>[ ] Can assign priority: Must-Have, Nice-to-Have, or Backup</li><li>[ ] Catalog can sort/group by priority tier</li><li>[ ] Priority displayed on camp cards with visual distinction</li></ul> |
+| **Priority** | P1 (Post-MVP) |
 | **Estimate** | S |
 
 ### 7.2 Epic: Summer Plan
@@ -356,7 +356,7 @@ Replace months of spreadsheet wrangling and calendar juggling with a purpose-bui
 ### 8.1 Core Entities
 | Entity | Description | Key Attributes |
 |--------|-------------|----------------|
-| Camp | A summer camp program in the user's catalog | id, name, location, address, cost, costPer (week/day/session), url, ageMin, ageMax, signupDate, dailyStartTime, dailyEndTime, benefits[], rank, notes, topic (P1) |
+| Camp | A summer camp program in the user's catalog | id, name, location, address, cost, costPer (week/day/session), url, ageMin, ageMax, signupDate, dailyStartTime, dailyEndTime, benefits[], notes, topic (P1), priority (P1 post-MVP: must/nice/backup) |
 | CampDateOption | An available date range offered by a camp (optional) | id, campId, startDate, endDate, label (e.g., "Week 1", "Session A") |
 | ScheduledSession | A camp session placed on the user's Summer Plan | id, campId, summerId, startDate, endDate, status (planned/confirmed/waitlisted), backupSessionId, notes |
 | FamilyEvent | Vacation or blocked time on the Summer Plan | id, summerId, name, startDate, endDate, eventType (vacation/blocked/other), notes |
@@ -477,7 +477,7 @@ signupDate: 2026-02-15
 dailyStartTime: "09:00"
 dailyEndTime: "16:00"
 benefits: ["Full Day", "STEM Focus", "Kid's Choice"]
-rank: 1
+# priority: must                   # P1 post-MVP - uncomment when ready (must/nice/backup)
 createdAt: 2026-02-01
 updatedAt: 2026-02-01
 ---
@@ -781,7 +781,7 @@ Delivered as summer begins, focused on day-to-day logistics:
 | Planned | A tentative schedule entry, not yet registered |
 | Confirmed | A schedule entry that has been registered/paid |
 | Waitlisted | Signed up but not yet guaranteed a spot |
-| Stack Rank | Priority ordering of camps by preference |
+| Priority Tier | Categorization of camps: Must-Have, Nice-to-Have, or Backup |
 
 ---
 

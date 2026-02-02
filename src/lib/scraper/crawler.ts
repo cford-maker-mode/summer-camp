@@ -113,7 +113,7 @@ export async function crawlCampSite(
     maxPages?: number;
     minScore?: number;
   } = {}
-): Promise<CrawlResult[]> {
+): Promise<{ results: CrawlResult[]; error?: string; blocked?: boolean }> {
   const { maxPages = 5, minScore = 2 } = options;
   const results: CrawlResult[] = [];
 
@@ -122,8 +122,12 @@ export async function crawlCampSite(
   const entryResult = await fetchUrl(entryUrl);
 
   if (!entryResult.success || !entryResult.html) {
-    console.log(`[Crawler] Failed to fetch entry page`);
-    return results;
+    console.log(`[Crawler] Failed to fetch entry page: ${entryResult.error}`);
+    return { 
+      results, 
+      error: entryResult.error || "Failed to fetch entry page",
+      blocked: entryResult.blocked 
+    };
   }
 
   results.push({
@@ -163,5 +167,5 @@ export async function crawlCampSite(
   }
 
   console.log(`[Crawler] Successfully fetched ${results.length} pages total`);
-  return results;
+  return { results };
 }

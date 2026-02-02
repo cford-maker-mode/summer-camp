@@ -12,7 +12,7 @@ signupDate:
 dailyStartTime:
 dailyEndTime:
 benefits: ["Full Musical Production", "Professional Directors and Choreographers", "All Kids Receive a Role", "Costumes Included", "Final Performance for Family and Friends", "Scholarships Available"]
-rank:
+# priority:                        # P1 post-MVP - must | nice | backup
 createdAt: 2026-02-02
 updatedAt: 2026-02-02
 # topic:                           # P1 feature - uncomment when ready

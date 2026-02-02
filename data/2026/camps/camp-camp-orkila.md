@@ -15,7 +15,7 @@ signupDate: 2026-02-04
 dailyStartTime:
 dailyEndTime:
 benefits: ["Full Day", "Overnight Camp", "Day Camp Available", "Weekend Family Camps", "Environmental Education", "Swim Lessons Available", "280+ Acres Beachfront Property", "Meals Included", "Cabin Lodging", "Archery", "Arts & Crafts", "Boating", "Zipline", "Climbing Wall", "Challenge Course", "Financial Assistance Available", "Vegetarian/Vegan/Gluten-Free Options"]
-rank:
+# priority:                        # P1 post-MVP - must | nice | backup
 createdAt: 2026-02-02
 updatedAt: 2026-02-02
 # topic:                           # P1 feature - uncomment when ready

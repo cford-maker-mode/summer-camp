@@ -121,17 +121,18 @@ export async function scrapeCampSite(
 
   // Step 2: Crawl the site
   console.log(`[Scraper] Starting deep crawl of: ${url}`);
-  const crawlResults = await crawlCampSite(url, { maxPages, minScore });
+  const crawlResult = await crawlCampSite(url, { maxPages, minScore });
 
-  if (crawlResults.length === 0) {
+  if (crawlResult.results.length === 0) {
     return {
       success: false,
-      error: "Failed to fetch any pages from the site",
+      error: crawlResult.error || "Failed to fetch any pages from the site",
+      blocked: crawlResult.blocked,
     };
   }
 
   // Step 3: Extract and synthesize data from all pages
-  const extractionResult = await extractFromMultiplePages(crawlResults, url);
+  const extractionResult = await extractFromMultiplePages(crawlResult.results, url);
 
   if (!extractionResult.success || !extractionResult.data) {
     return {

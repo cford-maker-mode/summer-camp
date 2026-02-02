@@ -56,19 +56,13 @@ export async function GET() {
         dailyStartTime: data.dailyStartTime,
         dailyEndTime: data.dailyEndTime,
         benefits: data.benefits || [],
-        rank: data.rank,
         createdAt: toDateString(data.createdAt) || "",
         updatedAt: toDateString(data.updatedAt) || "",
       });
     }
 
-    // Sort by rank (if set), then by name
-    camps.sort((a, b) => {
-      if (a.rank && b.rank) return a.rank - b.rank;
-      if (a.rank) return -1;
-      if (b.rank) return 1;
-      return a.name.localeCompare(b.name);
-    });
+    // Sort by name
+    camps.sort((a, b) => a.name.localeCompare(b.name));
 
     return NextResponse.json({ camps });
   } catch (error) {

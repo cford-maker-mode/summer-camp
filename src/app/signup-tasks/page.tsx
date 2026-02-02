@@ -39,7 +39,7 @@ import Link from "next/link";
 import type { ScheduledSession, SessionStatus, UrgencyLevel, SignupTask } from "@/types/summer";
 import type { Camp } from "@/types/camp";
 
-const SUMMER_ID = "summer-2026-emma";
+const SUMMER_ID = "summer-2026";
 
 // Urgency configuration
 const URGENCY_CONFIG: Record<UrgencyLevel, { icon: React.ReactNode; color: string; label: string }> = {

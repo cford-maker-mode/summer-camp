@@ -53,7 +53,12 @@ export default function CampsPage() {
   const [scrapedData, setScrapedData] = useState<ScrapedCampData | null>(null);
   const [saving, setSaving] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
-  const [sortBy, setSortBy] = useState<"rank" | "name" | "signup">("rank");
+  const [sortBy, setSortBy] = useState<"name" | "signup">("name");
+
+  // Children state (persisted to localStorage)
+  const [children, setChildren] = useState<string[]>([]);
+  const [newChildName, setNewChildName] = useState("");
+  const [showAddChild, setShowAddChild] = useState(false);
 
   // Add to Plan state
   const [addToPlanCamp, setAddToPlanCamp] = useState<Camp | null>(null);
@@ -61,6 +66,7 @@ export default function CampsPage() {
     startDate: "",
     endDate: "",
     status: "planned" as SessionStatus,
+    childName: "",
     notes: "",
   });
   const [addingToPlan, setAddingToPlan] = useState(false);
@@ -70,7 +76,24 @@ export default function CampsPage() {
     severity: "success",
   });
 
-  const SUMMER_ID = "summer-2026-emma";
+  const SUMMER_ID = "summer-2026";
+
+  // Load children from localStorage
+  useEffect(() => {
+    const savedChildren = localStorage.getItem("summerCampChildren");
+    if (savedChildren) {
+      setChildren(JSON.parse(savedChildren));
+    }
+  }, []);
+
+  // Save children to localStorage when updated
+  const addChild = (name: string) => {
+    if (name.trim() && !children.includes(name.trim())) {
+      const updated = [...children, name.trim()];
+      setChildren(updated);
+      localStorage.setItem("summerCampChildren", JSON.stringify(updated));
+    }
+  };
 
   // Load camps on mount
   useEffect(() => {
@@ -171,12 +194,6 @@ export default function CampsPage() {
   }
 
   const sortedCamps = [...camps].sort((a, b) => {
-    if (sortBy === "rank") {
-      if (a.rank && b.rank) return a.rank - b.rank;
-      if (a.rank) return -1;
-      if (b.rank) return 1;
-      return a.name.localeCompare(b.name);
-    }
     if (sortBy === "signup") {
       if (a.signupDate && b.signupDate) return a.signupDate.localeCompare(b.signupDate);
       if (a.signupDate) return -1;
@@ -589,7 +606,6 @@ export default function CampsPage() {
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Sort</InputLabel>
           <Select value={sortBy} label="Sort" onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
-            <MenuItem value="rank">Rank</MenuItem>
             <MenuItem value="name">Name</MenuItem>
             <MenuItem value="signup">Signup Date</MenuItem>
           </Select>
@@ -633,6 +649,7 @@ export default function CampsPage() {
                 startDate: nextMonday.toISOString().split("T")[0],
                 endDate: friday.toISOString().split("T")[0],
                 status: "planned",
+                childName: "",
                 notes: "",
               });
             }} />
@@ -652,7 +669,11 @@ export default function CampsPage() {
       {/* Add to Plan Dialog */}
       <Dialog
         open={Boolean(addToPlanCamp)}
-        onClose={() => setAddToPlanCamp(null)}
+        onClose={() => {
+          setAddToPlanCamp(null);
+          setShowAddChild(false);
+          setNewChildName("");
+        }}
         maxWidth="sm"
         fullWidth
       >
@@ -666,6 +687,68 @@ export default function CampsPage() {
               <Typography variant="body2" color="text.secondary">
                 {addToPlanCamp.location}
               </Typography>
+
+              {/* Child selector */}
+              <FormControl fullWidth>
+                <InputLabel>Child (optional)</InputLabel>
+                <Select
+                  value={addToPlanForm.childName}
+                  label="Child (optional)"
+                  onChange={(e) => {
+                    if (e.target.value === "__add_new__") {
+                      setShowAddChild(true);
+                    } else {
+                      setAddToPlanForm(prev => ({ ...prev, childName: e.target.value }));
+                    }
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {children.map(child => (
+                    <MenuItem key={child} value={child}>{child}</MenuItem>
+                  ))}
+                  <MenuItem value="__add_new__" sx={{ color: "primary.main" }}>
+                    <AddIcon sx={{ mr: 1, fontSize: 18 }} /> Add new child...
+                  </MenuItem>
+                </Select>
+              </FormControl>
+
+              {showAddChild && (
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <TextField
+                    label="New child name"
+                    value={newChildName}
+                    onChange={(e) => setNewChildName(e.target.value)}
+                    size="small"
+                    fullWidth
+                    autoFocus
+                  />
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      if (newChildName.trim()) {
+                        addChild(newChildName.trim());
+                        setAddToPlanForm(prev => ({ ...prev, childName: newChildName.trim() }));
+                        setNewChildName("");
+                        setShowAddChild(false);
+                      }
+                    }}
+                  >
+                    Add
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setShowAddChild(false);
+                      setNewChildName("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
+              )}
 
               <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
@@ -824,21 +907,6 @@ function CampCard({ camp, onAddToPlan }: { camp: Camp; onAddToPlan: (camp: Camp)
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-              {camp.rank && (
-                <Typography
-                  variant="body2"
-                  sx={{
-                    backgroundColor: "primary.main",
-                    color: "white",
-                    px: 1,
-                    py: 0.25,
-                    borderRadius: 1,
-                    fontWeight: 600,
-                  }}
-                >
-                  #{camp.rank}
-                </Typography>
-              )}
               <Typography variant="h6">{camp.name}</Typography>
             </Box>
 

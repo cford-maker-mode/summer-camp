@@ -14,10 +14,6 @@ import {
   ListItemText,
   IconButton,
   Divider,
-  FormControl,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -50,15 +46,10 @@ const navItems: NavItem[] = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedChild, setSelectedChild] = useState("emma");
   const pathname = usePathname();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
-  };
-
-  const handleChildChange = (event: SelectChangeEvent) => {
-    setSelectedChild(event.target.value);
   };
 
   const drawer = (
@@ -127,17 +118,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Summer Camp Planner
           </Typography>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <Select
-              value={selectedChild}
-              onChange={handleChildChange}
-              displayEmpty
-              sx={{ backgroundColor: "background.default" }}
-            >
-              <MenuItem value="emma">Emma</MenuItem>
-              <MenuItem value="jack">Jack</MenuItem>
-            </Select>
-          </FormControl>
           <Typography variant="body2" sx={{ ml: 2, color: "text.secondary" }}>
             2026
           </Typography>

@@ -1,6 +1,6 @@
 ---
 id: event-beach-vacation
-summerId: summer-2026-emma
+summerId: summer-2026
 name: Beach Vacation
 startDate: 2026-06-21
 endDate: 2026-06-27

@@ -141,7 +141,7 @@ export function generateCampMarkdown(
     camp.dailyStartTime ? `dailyStartTime: "${camp.dailyStartTime}"` : 'dailyStartTime:',
     camp.dailyEndTime ? `dailyEndTime: "${camp.dailyEndTime}"` : 'dailyEndTime:',
     `benefits: ${formatBenefits(camp.benefits)}`,
-    "rank:",
+    "# priority:                        # P1 post-MVP - uncomment when ready (must/nice/backup)",
     `createdAt: ${camp.createdAt}`,
     `updatedAt: ${camp.updatedAt}`,
     "# topic:                           # P1 feature - uncomment when ready",
