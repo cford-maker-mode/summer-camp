@@ -88,7 +88,8 @@ export function normalizeCampData(scraped: ScrapedCampData): Camp {
     ageMax: typeof scraped.ageMax === "number" ? scraped.ageMax : undefined,
     gradeMin: typeof scraped.gradeMin === "number" ? scraped.gradeMin : undefined,
     gradeMax: typeof scraped.gradeMax === "number" ? scraped.gradeMax : undefined,
-    signupDate: scraped.signupDate,
+    signupDate: scraped.signupDate, // deprecated
+    registrationDates: scraped.registrationDates,
     overnight: scraped.overnight,
     dailyStartTime: scraped.overnight ? undefined : scraped.dailyStartTime,
     dailyEndTime: scraped.overnight ? undefined : scraped.dailyEndTime,
@@ -122,6 +123,10 @@ export function generateCampMarkdown(
   const allSessions = sessions || scraped.sessions;
 
   // Build YAML frontmatter
+  const formatRegDates = (arr?: { label: string; date: string }[]) => {
+    if (!arr || arr.length === 0) return "[]";
+    return '[\n' + arr.map(rd => `  { label: "${rd.label.replace(/"/g, '\\"')}", date: "${rd.date}" }`).join(',\n') + '\n]';
+  };
   const frontmatter = [
     "---",
     `id: ${camp.id}`,
@@ -137,6 +142,7 @@ export function generateCampMarkdown(
     camp.gradeMin !== undefined ? `gradeMin: ${camp.gradeMin}` : "gradeMin:",
     camp.gradeMax !== undefined ? `gradeMax: ${camp.gradeMax}` : "gradeMax:",
     camp.signupDate ? `signupDate: ${camp.signupDate}` : "signupDate:",
+    camp.registrationDates && camp.registrationDates.length > 0 ? `registrationDates: ${formatRegDates(camp.registrationDates)}` : "registrationDates: []",
     camp.overnight ? `overnight: true` : "overnight:",
     camp.dailyStartTime ? `dailyStartTime: "${camp.dailyStartTime}"` : 'dailyStartTime:',
     camp.dailyEndTime ? `dailyEndTime: "${camp.dailyEndTime}"` : 'dailyEndTime:',

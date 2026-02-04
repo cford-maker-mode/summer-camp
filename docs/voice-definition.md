@@ -10,6 +10,7 @@ The voice of someone who gets it — who knows the landscape and has something u
 - **Gently self-aware** — acknowledges the absurdity of the situation (yes, summer camp planning is a thing) without making a joke out of it
 - **Competent but approachable** — knowledgeable without being preachy or patronizing
 - **Warm** — feels like a helpful friend, not an ad
+- **Instructional and clear** — provides direct, actionable guidance to help users succeed, with practical steps and minimal fluff
 
 ## What to Avoid
 

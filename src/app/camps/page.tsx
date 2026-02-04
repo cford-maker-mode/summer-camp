@@ -39,9 +39,12 @@ import {
   Edit as EditIcon,
   CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
+
 import type { Camp, ScrapedCampData } from "@/types/camp";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
 export default function CampsPage() {
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [loading, setLoading] = useState(true);
   const [addPanelOpen, setAddPanelOpen] = useState(false);
@@ -89,7 +92,10 @@ export default function CampsPage() {
 
   // Debounced search for Google Places
   useEffect(() => {
-    const query = placesField && editForm ? editForm[placesField] : '';
+    let query = '';
+    if (placesField === 'name' && editForm?.name) query = editForm.name;
+    if (placesField === 'location' && editForm?.location) query = editForm.location;
+    if (placesField === 'manual-location' && scrapedData?.location) query = scrapedData.location;
     if (!query || query.length < 3) {
       setPlaceSuggestions([]);
       setPlacesDropdownOpen(false);
@@ -110,7 +116,7 @@ export default function CampsPage() {
       }
     }, 400);
     return () => clearTimeout(timeout);
-  }, [editForm?.name, editForm?.location, placesField]);
+  }, [editForm?.name, editForm?.location, scrapedData?.location, placesField]);
 
   const SUMMER_ID = "summer-2026";
 
@@ -158,29 +164,29 @@ export default function CampsPage() {
     setScrapedData(null);
 
     try {
-      const res = await fetch("/api/scrape-camp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: scrapeUrl, deep: true }),
-      });
-
-      const data = await res.json();
+      let res, data;
+      if (isFeatureEnabled("aiCampExtractor")) {
+        res = await fetch("/api/ai-camp-extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: scrapeUrl }),
+        });
+        data = await res.json();
+      } else {
+        res = await fetch("/api/scrape-camp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: scrapeUrl, deep: true }),
+        });
+        data = await res.json();
+      }
 
       if (!data.success) {
-        setScrapeError(data.error || "Failed to scrape camp data");
+        setScrapeError(data.error || "Failed to extract camp data");
         return;
       }
 
-      // Check for warnings (low confidence extraction)
-      if (data.warning) {
-        setScrapeWarning(data.warning);
-      }
-      if (data.confidence !== undefined) {
-        setScrapeConfidence(data.confidence);
-      }
-
       setScrapedData(data.data);
-      // Auto-expand details when data is scraped
       if (data.data) {
         setDetailsExpanded(true);
       }
@@ -294,10 +300,26 @@ export default function CampsPage() {
 
     setSavingEdit(true);
     try {
+      // Always send all optional fields, using null if cleared
+      const patchBody = {
+        ...editForm,
+        cost: editForm?.cost ?? null,
+        costMax: editForm?.costMax ?? null,
+        costPer: editForm?.costPer ?? null,
+        ageMin: editForm?.ageMin ?? null,
+        ageMax: editForm?.ageMax ?? null,
+        gradeMin: editForm?.gradeMin ?? null,
+        gradeMax: editForm?.gradeMax ?? null,
+        signupDate: editForm?.signupDate ?? null,
+        overnight: editForm?.overnight ?? null,
+        dailyStartTime: editForm?.dailyStartTime ?? null,
+        dailyEndTime: editForm?.dailyEndTime ?? null,
+        benefits: editForm?.benefits ?? [],
+      };
       const res = await fetch(`/api/camps/${editCamp.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(patchBody),
       });
 
       const data = await res.json();
@@ -336,6 +358,10 @@ export default function CampsPage() {
         Camp Catalog
       </Typography>
 
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        Find summer camps recommended by the community, and add new options by sharing the specific camp session page you’re interested in. Add camps to your Plan to visualize your summer at a glance.
+      </Typography>
+
       {/* Add Camp Panel */}
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ pb: 1 }}>
@@ -353,31 +379,12 @@ export default function CampsPage() {
         <Collapse in={addPanelOpen}>
           <CardContent>
             {/* Status alerts */}
-            {scrapeWarning && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                {scrapeWarning}
-                {scrapeConfidence !== null && (
-                  <Typography variant="caption" display="block">
-                    Confidence: {Math.round(scrapeConfidence * 100)}%
-                  </Typography>
-                )}
-              </Alert>
-            )}
-            {scrapeConfidence !== null && scrapeConfidence > 0.5 && !scrapeWarning && (
-              <Alert severity="success" sx={{ mb: 2 }}>
-                Details extracted successfully
-                <Typography variant="caption" display="block">
-                  Confidence: {Math.round(scrapeConfidence * 100)}%
-                </Typography>
-              </Alert>
-            )}
             {scrapeError && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {scrapeError}
               </Alert>
             )}
 
-            {/* Primary row: Camp Name + URL + Fetch button */}
             <Grid container spacing={2} alignItems="flex-end">
               <Grid item xs={12} sm={5}>
                 <TextField
@@ -394,40 +401,42 @@ export default function CampsPage() {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={5}>
-                <TextField
-                  fullWidth
-                  label="Website URL"
-                  placeholder="https://example-camp.com/summer-program"
-                  value={scrapeUrl}
-                  onChange={(e) => {
-                    setScrapeUrl(e.target.value);
-                    if (scrapedData) {
-                      handleUpdateScrapedField("url", e.target.value);
-                    }
-                  }}
-                  disabled={scraping}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LinkIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={handleScrape}
-                  disabled={!scrapeUrl.trim() || scraping}
-                  startIcon={scraping ? <CircularProgress size={16} /> : null}
-                  sx={{ height: 56 }}
-                >
-                  {scraping ? "..." : "Fetch"}
-                </Button>
-              </Grid>
+              <>
+                <Grid item xs={12} sm={5}>
+                  <TextField
+                    fullWidth
+                    label="Website URL"
+                    placeholder="https://example-camp.com/summer-program"
+                    value={scrapeUrl}
+                    onChange={(e) => {
+                      setScrapeUrl(e.target.value);
+                      if (scrapedData) {
+                        handleUpdateScrapedField("url", e.target.value);
+                      }
+                    }}
+                    disabled={scraping}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LinkIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={2}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={handleScrape}
+                    disabled={!scrapeUrl.trim() || scraping}
+                    startIcon={scraping ? <CircularProgress size={16} /> : null}
+                    sx={{ height: 56 }}
+                  >
+                    {scraping ? "..." : "Fetch"}
+                  </Button>
+                </Grid>
+              </>
             </Grid>
 
             {/* Expandable details section */}
@@ -446,19 +455,44 @@ export default function CampsPage() {
               <Box sx={{ mt: 2 }}>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Location"
-                      placeholder="Camp facility name"
-                      value={scrapedData?.location || ""}
-                      onChange={(e) => {
-                        if (!scrapedData) {
-                          setScrapedData({ url: scrapeUrl, location: e.target.value });
-                        } else {
+                    <Box sx={{ position: 'relative' }}>
+                      <TextField
+                        fullWidth
+                        label="Business"
+                        placeholder="Camp facility name"
+                        value={scrapedData?.location || ""}
+                        onChange={(e) => {
                           handleUpdateScrapedField("location", e.target.value);
-                        }
-                      }}
-                    />
+                          setPlacesField('manual-location');
+                        }}
+                        onFocus={() => setPlacesField('manual-location')}
+                        onBlur={() => setTimeout(() => setPlacesDropdownOpen(false), 200)}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end"><Typography variant="caption" color="text.secondary">Type for suggestions</Typography></InputAdornment>
+                        }}
+                      />
+                      {placesDropdownOpen && placesField === 'manual-location' && (
+                        <Box sx={{ position: 'absolute', zIndex: 10, top: 56, left: 0, right: 0, bgcolor: 'background.paper', border: '1px solid #ccc', borderRadius: 1, boxShadow: 2 }}>
+                          {placesLoading ? (
+                            <Box sx={{ p: 2, textAlign: 'center' }}><CircularProgress size={20} /></Box>
+                          ) : (
+                            placeSuggestions.map((place) => (
+                              <Box
+                                key={place.place_id}
+                                sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                                onMouseDown={() => {
+                                  setScrapedData((prev) => prev ? { ...prev, location: place.name, address: place.address } : prev);
+                                  setPlacesDropdownOpen(false);
+                                }}
+                              >
+                                <Typography variant="body2">{place.name}</Typography>
+                                <Typography variant="caption" color="text.secondary">{place.address}</Typography>
+                              </Box>
+                            ))
+                          )}
+                        </Box>
+                      )}
+                    </Box>
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
@@ -550,7 +584,8 @@ export default function CampsPage() {
                     <TextField
                       fullWidth
                       label="Cost (min)"
-                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={scrapedData?.cost || ""}
                       onChange={(e) => {
                         const val = parseInt(e.target.value) || undefined;
@@ -570,7 +605,8 @@ export default function CampsPage() {
                     <TextField
                       fullWidth
                       label="Cost (max)"
-                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="if range"
                       value={scrapedData?.costMax || ""}
                       onChange={(e) => {
@@ -608,21 +644,44 @@ export default function CampsPage() {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Signup Opens"
-                      type="date"
-                      value={scrapedData?.signupDate || ""}
-                      onChange={(e) => {
-                        if (!scrapedData) {
-                          setScrapedData({ url: scrapeUrl, signupDate: e.target.value });
-                        } else {
-                          handleUpdateScrapedField("signupDate", e.target.value);
-                        }
-                      }}
-                      slotProps={{ inputLabel: { shrink: true } }}
-                    />
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Registration/Signup Dates</Typography>
+                    {(scrapedData?.registrationDates || []).map((rd, i) => (
+                      <Box key={i} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                        <TextField
+                          label="Label"
+                          value={rd.label}
+                          onChange={e => {
+                            const arr = [...(scrapedData?.registrationDates || [])];
+                            arr[i] = { ...arr[i], label: e.target.value };
+                            handleUpdateScrapedField("registrationDates", arr);
+                          }}
+                          size="small"
+                        />
+                        <TextField
+                          label="Date"
+                          type="date"
+                          value={rd.date}
+                          onChange={e => {
+                            const arr = [...(scrapedData?.registrationDates || [])];
+                            arr[i] = { ...arr[i], date: e.target.value };
+                            handleUpdateScrapedField("registrationDates", arr);
+                          }}
+                          size="small"
+                          InputLabelProps={{ shrink: true }}
+                        />
+                        <Button color="error" onClick={() => {
+                          const arr = [...(scrapedData?.registrationDates || [])];
+                          arr.splice(i, 1);
+                          handleUpdateScrapedField("registrationDates", arr);
+                        }}>Remove</Button>
+                      </Box>
+                    ))}
+                    <Button size="small" onClick={() => {
+                      const arr = [...(scrapedData?.registrationDates || [])];
+                      arr.push({ label: '', date: '' });
+                      handleUpdateScrapedField("registrationDates", arr);
+                    }}>Add Registration Date</Button>
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
@@ -979,6 +1038,9 @@ export default function CampsPage() {
                       }}
                       onFocus={() => setPlacesField('name')}
                       onBlur={() => setTimeout(() => setPlacesDropdownOpen(false), 200)}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end"><Typography variant="caption" color="text.secondary">Type for suggestions</Typography></InputAdornment>
+                      }}
                     />
                     {placesDropdownOpen && placesField === 'name' && (
                       <Box sx={{ position: 'absolute', zIndex: 10, top: 56, left: 0, right: 0, bgcolor: 'background.paper', border: '1px solid #ccc', borderRadius: 1, boxShadow: 2 }}>
@@ -990,8 +1052,7 @@ export default function CampsPage() {
                               key={place.place_id}
                               sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
                               onMouseDown={() => {
-                                handleUpdateEditField('name', place.name);
-                                handleUpdateEditField('address', place.address);
+                                setEditForm((prev) => prev ? { ...prev, location: place.name, address: place.address } : prev);
                                 setPlacesDropdownOpen(false);
                               }}
                             >
@@ -1023,7 +1084,7 @@ export default function CampsPage() {
                   <Box sx={{ position: 'relative' }}>
                     <TextField
                       fullWidth
-                      label="Location"
+                      label="Business"
                       value={editForm.location || ""}
                       onChange={(e) => {
                         handleUpdateEditField("location", e.target.value);
@@ -1031,6 +1092,9 @@ export default function CampsPage() {
                       }}
                       onFocus={() => setPlacesField('location')}
                       onBlur={() => setTimeout(() => setPlacesDropdownOpen(false), 200)}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end"><Typography variant="caption" color="text.secondary">Type for suggestions</Typography></InputAdornment>
+                      }}
                     />
                     {placesDropdownOpen && placesField === 'location' && (
                       <Box sx={{ position: 'absolute', zIndex: 10, top: 56, left: 0, right: 0, bgcolor: 'background.paper', border: '1px solid #ccc', borderRadius: 1, boxShadow: 2 }}>
@@ -1042,8 +1106,7 @@ export default function CampsPage() {
                               key={place.place_id}
                               sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
                               onMouseDown={() => {
-                                handleUpdateEditField('location', place.name);
-                                handleUpdateEditField('address', place.address);
+                                setEditForm((prev) => prev ? { ...prev, location: place.name, address: place.address } : prev);
                                 setPlacesDropdownOpen(false);
                               }}
                             >
@@ -1105,7 +1168,8 @@ export default function CampsPage() {
                   <TextField
                     fullWidth
                     label="Cost (min)"
-                    type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={editForm.cost || ""}
                     onChange={(e) => handleUpdateEditField("cost", parseInt(e.target.value) || undefined)}
                     InputProps={{
@@ -1117,9 +1181,10 @@ export default function CampsPage() {
                   <TextField
                     fullWidth
                     label="Cost (max)"
-                    type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={editForm.costMax || ""}
-                    onChange={(e) => handleUpdateEditField("costMax", parseInt(e.target.value) || undefined)}
+                    onChange={(e) => handleUpdateEditField("costMax", e.target.value === "" ? undefined : parseInt(e.target.value))}
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     }}
@@ -1139,15 +1204,44 @@ export default function CampsPage() {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Signup Opens"
-                    type="date"
-                    value={editForm.signupDate || ""}
-                    onChange={(e) => handleUpdateEditField("signupDate", e.target.value)}
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>Registration/Signup Dates</Typography>
+                  {(editForm.registrationDates || []).map((rd, i) => (
+                    <Box key={i} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                      <TextField
+                        label="Label"
+                        value={rd.label}
+                        onChange={e => {
+                          const arr = [...(editForm.registrationDates || [])];
+                          arr[i] = { ...arr[i], label: e.target.value };
+                          handleUpdateEditField("registrationDates", arr);
+                        }}
+                        size="small"
+                      />
+                      <TextField
+                        label="Date"
+                        type="date"
+                        value={rd.date}
+                        onChange={e => {
+                          const arr = [...(editForm.registrationDates || [])];
+                          arr[i] = { ...arr[i], date: e.target.value };
+                          handleUpdateEditField("registrationDates", arr);
+                        }}
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                      />
+                      <Button color="error" onClick={() => {
+                        const arr = [...(editForm.registrationDates || [])];
+                        arr.splice(i, 1);
+                        handleUpdateEditField("registrationDates", arr);
+                      }}>Remove</Button>
+                    </Box>
+                  ))}
+                  <Button size="small" onClick={() => {
+                    const arr = [...(editForm.registrationDates || [])];
+                    arr.push({ label: '', date: '' });
+                    handleUpdateEditField("registrationDates", arr);
+                  }}>Add Registration Date</Button>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControlLabel
@@ -1198,18 +1292,46 @@ export default function CampsPage() {
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            setEditCamp(null);
-            setEditForm(null);
-          }}>Cancel</Button>
-          <Button
-            variant="contained"
-            disabled={!editForm?.name || savingEdit}
-            onClick={handleSaveEdit}
-          >
-            {savingEdit ? "Saving..." : "Save Changes"}
-          </Button>
+        <DialogActions sx={{ justifyContent: 'space-between' }}>
+          <Box>
+            <Button color="error" variant="outlined" onClick={() => setDeleteConfirmOpen(true)}>Delete</Button>
+            <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+              <DialogTitle>Confirm Delete</DialogTitle>
+              <DialogContent>
+                <Typography>Are you sure you want to delete this camp?</Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+                <Button color="error" variant="contained" onClick={async () => {
+                  setDeleteConfirmOpen(false);
+                  if (!editCamp) return;
+                  try {
+                    const res = await fetch(`/api/camps/${editCamp.id}`, { method: 'DELETE' });
+                    if (!res.ok) throw new Error('Failed to delete camp');
+                    setSnackbar({ open: true, message: 'Camp deleted', severity: 'success' });
+                    setEditCamp(null);
+                    setEditForm(null);
+                    loadCamps();
+                  } catch {
+                    setSnackbar({ open: true, message: 'Failed to delete camp', severity: 'error' });
+                  }
+                }}>Delete</Button>
+              </DialogActions>
+            </Dialog>
+          </Box>
+          <Box>
+            <Button onClick={() => {
+              setEditCamp(null);
+              setEditForm(null);
+            }}>Cancel</Button>
+            <Button
+              variant="contained"
+              disabled={!editForm?.name || savingEdit}
+              onClick={handleSaveEdit}
+            >
+              {savingEdit ? "Saving..." : "Save Changes"}
+            </Button>
+          </Box>
         </DialogActions>
       </Dialog>
 
@@ -1248,17 +1370,18 @@ function CampCard({ camp, onAddToPlan, onEdit }: { camp: Camp; onAddToPlan: (cam
   };
 
   const formatGrades = () => {
-    if (camp.gradeMin === undefined && camp.gradeMax === undefined) return null;
+    if ((camp.gradeMin === undefined || camp.gradeMin === null) && (camp.gradeMax === undefined || camp.gradeMax === null)) return null;
     const formatGrade = (g: number | undefined | null) => {
       if (g === undefined || g === null) return "?";
       return g === 0 ? "K" : g.toString();
     };
-    if (camp.gradeMin !== undefined && camp.gradeMax !== undefined) {
+    if (camp.gradeMin !== undefined && camp.gradeMin !== null && camp.gradeMax !== undefined && camp.gradeMax !== null) {
       if (camp.gradeMin === camp.gradeMax) return `Grade ${formatGrade(camp.gradeMin)}`;
       return `Grades ${formatGrade(camp.gradeMin)}-${formatGrade(camp.gradeMax)}`;
     }
-    if (camp.gradeMin !== undefined) return `Grade ${formatGrade(camp.gradeMin)}+`;
-    return `Up to grade ${formatGrade(camp.gradeMax!)}`;
+    if (camp.gradeMin !== undefined && camp.gradeMin !== null) return `Grade ${formatGrade(camp.gradeMin)}+`;
+    if (camp.gradeMax !== undefined && camp.gradeMax !== null) return `Up to grade ${formatGrade(camp.gradeMax)}`;
+    return null;
   };
 
   const formatEligibility = () => {
@@ -1268,20 +1391,30 @@ function CampCard({ camp, onAddToPlan, onEdit }: { camp: Camp; onAddToPlan: (cam
     return grades || ages;
   };
 
-  const formatSignup = () => {
-    if (!camp.signupDate) return null;
-    const date = new Date(camp.signupDate + "T00:00:00");
-    const now = new Date();
+  // Show all registration dates as labeled chips
+  const now = new Date();
+  const registrationDates = camp.registrationDates || [];
+  const getSignupChip = (rd: { label: string; date: string }) => {
+    if (!rd.date) return null;
+    const date = new Date(rd.date + "T00:00:00");
     const daysUntil = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (daysUntil < 0) return "Signup passed";
-    if (daysUntil === 0) return "Signup TODAY!";
-    if (daysUntil <= 7) return `Signup in ${daysUntil} days`;
-    return `Signup: ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    let label = rd.label ? `${rd.label}: ` : "Signup: ";
+    if (daysUntil < 0) label += "passed";
+    else if (daysUntil === 0) label += "TODAY!";
+    else if (daysUntil <= 7) label += `in ${daysUntil} days`;
+    else label += date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const isSoon = daysUntil >= 0 && daysUntil <= 7;
+    return (
+      <Chip
+        key={rd.label + rd.date}
+        icon={<CalendarIcon />}
+        label={label}
+        size="small"
+        color={isSoon ? "warning" : "default"}
+        sx={{ mr: 0.5, mb: 0.5 }}
+      />
+    );
   };
-
-  const signupInfo = formatSignup();
-  const isSignupSoon = signupInfo && (signupInfo.includes("days") || signupInfo.includes("TODAY"));
 
   return (
     <Card>
@@ -1304,14 +1437,7 @@ function CampCard({ camp, onAddToPlan, onEdit }: { camp: Camp; onAddToPlan: (cam
 
             <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
               {formatCost() && <Chip label={formatCost()} size="small" />}
-              {signupInfo && (
-                <Chip
-                  icon={<CalendarIcon />}
-                  label={signupInfo}
-                  size="small"
-                  color={isSignupSoon ? "warning" : "default"}
-                />
-              )}
+              {registrationDates.map(getSignupChip)}
             </Box>
           </Box>
 

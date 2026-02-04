@@ -11,6 +11,11 @@ export type CostPer = "week" | "day" | "session";
 /**
  * Core camp entity - represents a summer camp in the catalog
  */
+export interface RegistrationDate {
+  label: string;
+  date: string; // YYYY-MM-DD
+}
+
 export interface Camp {
   id: string;
   name: string;
@@ -24,7 +29,8 @@ export interface Camp {
   ageMax?: number;
   gradeMin?: number;  // Grade level (alternative to age)
   gradeMax?: number;
-  signupDate?: string; // YYYY-MM-DD format
+  signupDate?: string; // Deprecated: use registrationDates
+  registrationDates?: RegistrationDate[];
   overnight?: boolean;  // true = overnight camp (no daily times)
   dailyStartTime?: string; // HH:MM format (24-hour)
   dailyEndTime?: string; // HH:MM format (24-hour)
@@ -59,7 +65,8 @@ export interface ScrapedCampData {
   ageMax?: number | string;
   gradeMin?: number | string;  // Grade level (alternative to age)
   gradeMax?: number | string;
-  signupDate?: string;
+  signupDate?: string; // Deprecated: use registrationDates
+  registrationDates?: RegistrationDate[];
   overnight?: boolean;  // true = overnight camp (no daily times)
   dailyStartTime?: string;
   dailyEndTime?: string;

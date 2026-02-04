@@ -1,9 +1,13 @@
+| Manual Site Paste Extraction | If site fetch fails, allow user to copy/paste site contents to extract camp details using the app's extraction logic. | High | New | Improves robustness and user control |
+| Suggest an Edit | Allow users to propose catalog changes from the UI, generating a patch/export for review or PR. Enables crowdsourced data improvement. | High | New | Needs moderation and versioning |
 ## Feature Ideas Backlog
 
 
 
 | Feature Idea                | Description                                      | Priority | Status   | Notes           |
+| Camp Season Date Range (Macro Only) | Add seasonStart and seasonEnd fields to each camp entry for overall availability. Display on camp card. No individual sessions in catalog; personal notes only in user plan. | Highest | New | Catalog stays minimal; directs users to official site for details |
 |-----------------------------|--------------------------------------------------|----------|----------|-----------------|
+| Calendar Integration in Summer Plan | Integrate user's calendar (Google, Outlook, etc.) directly into the summer plan view for seamless planning, conflict detection, and event sync. | High | New | Requires OAuth, calendar API, and UI calendar component |
 | Cloud Storage as User Account | Use Google Drive/OneDrive as the user's "account"—no app-managed accounts, all private data in user cloud | Medium   | New      | Not in current app   |
 | Optional AI Fetcher (BYO Key) | AI-powered scraping/extraction is visible but gated until user provides their own API key | Medium   | New      | Not in current app   |
 | In-app “Suggest an Edit” Flow | Allow users to propose catalog changes from the UI, generating a patch/export for PR | Low      | New      | Not in current app   |

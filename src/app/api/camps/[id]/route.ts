@@ -22,6 +22,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body: Partial<ScrapedCampData> = await request.json();
+    console.log('[PATCH] Incoming body:', JSON.stringify(body));
 
     // Find the camp file
     const campsDir = path.join(process.cwd(), "data", "2026", "camps");
@@ -39,23 +40,23 @@ export async function PATCH(
     const content = await fs.readFile(filePath, "utf-8");
     const { data: frontmatter, content: markdownContent } = matter(content);
 
-    // Update fields from body
-    if (body.name !== undefined) frontmatter.name = body.name;
-    if (body.location !== undefined) frontmatter.location = body.location || null;
-    if (body.address !== undefined) frontmatter.address = body.address || null;
-    if (body.cost !== undefined) frontmatter.cost = body.cost || null;
-    if (body.costMax !== undefined) frontmatter.costMax = body.costMax || null;
-    if (body.costPer !== undefined) frontmatter.costPer = body.costPer || "week";
-    if (body.url !== undefined) frontmatter.url = body.url || null;
-    if (body.ageMin !== undefined) frontmatter.ageMin = body.ageMin || null;
-    if (body.ageMax !== undefined) frontmatter.ageMax = body.ageMax || null;
-    if (body.gradeMin !== undefined) frontmatter.gradeMin = body.gradeMin ?? null;
-    if (body.gradeMax !== undefined) frontmatter.gradeMax = body.gradeMax ?? null;
-    if (body.signupDate !== undefined) frontmatter.signupDate = body.signupDate || null;
-    if (body.overnight !== undefined) frontmatter.overnight = body.overnight || null;
-    if (body.dailyStartTime !== undefined) frontmatter.dailyStartTime = body.dailyStartTime || null;
-    if (body.dailyEndTime !== undefined) frontmatter.dailyEndTime = body.dailyEndTime || null;
-    if (body.benefits !== undefined) frontmatter.benefits = body.benefits || [];
+    // Update fields from body, allowing clearing by setting to null
+    if ('name' in body) frontmatter.name = body.name ?? null;
+    if ('location' in body) frontmatter.location = body.location ?? null;
+    if ('address' in body) frontmatter.address = body.address ?? null;
+    if ('cost' in body) frontmatter.cost = body.cost ?? null;
+    if ('costMax' in body) frontmatter.costMax = body.costMax ?? null;
+    if ('costPer' in body) frontmatter.costPer = body.costPer ?? "week";
+    if ('url' in body) frontmatter.url = body.url ?? null;
+    if ('ageMin' in body) frontmatter.ageMin = body.ageMin ?? null;
+    if ('ageMax' in body) frontmatter.ageMax = body.ageMax ?? null;
+    if ('gradeMin' in body) frontmatter.gradeMin = body.gradeMin ?? null;
+    if ('gradeMax' in body) frontmatter.gradeMax = body.gradeMax ?? null;
+    if ('signupDate' in body) frontmatter.signupDate = body.signupDate ?? null;
+    if ('overnight' in body) frontmatter.overnight = body.overnight ?? null;
+    if ('dailyStartTime' in body) frontmatter.dailyStartTime = body.dailyStartTime ?? null;
+    if ('dailyEndTime' in body) frontmatter.dailyEndTime = body.dailyEndTime ?? null;
+    if ('benefits' in body) frontmatter.benefits = body.benefits ?? [];
 
     // Update timestamp
     frontmatter.updatedAt = new Date().toISOString().split("T")[0];

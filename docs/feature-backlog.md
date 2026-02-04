@@ -1,7 +1,5 @@
 ## Feature Ideas Backlog
 
-
-
 | Feature Idea                | Description                                      | Priority | Status   | Notes           |
 |-----------------------------|--------------------------------------------------|----------|----------|-----------------|
 | Cloud Storage as User Account | Use Google Drive/OneDrive as the user's "account"—no app-managed accounts, all private data in user cloud | Medium   | New      | Not in current app   |
@@ -12,6 +10,10 @@
 | Paid Camp Promotion          | Allow camps to pay fee to promote their camp for specific area codes | Low      | New      | Monetization idea   |
 | Multi-Address User Profiles  | Enable users to include multiple addresses (home, work, relatives) to assist in selection and logistics | Medium   | New      | Improves logistics  |
 | Embedded Onboarding Content  | Create onboarding content and embed it throughout the experience to help users easily navigate and contribute | Medium   | New      | UX improvement      |
+| Display Session Dates in Catalog | Show all available session dates for each camp in the catalog and summer plan views, enabling users to browse and select appropriate sessions | High     | New      | Improves selection and planning |
 
+## User Guidance: Choosing the Best Camp URL
+- For optimal data extraction, users should navigate to the most specific camp page possible—ideally the page for the exact camp location and session dates they are interested in. Linking to a general business site may result in incomplete or less relevant data. Always prefer URLs that display detailed camp information, registration options, and session schedules.
 
-*Add new feature ideas to the table above. Use the columns to track details, priority, and status (e.g., New, Under Review, Deferred).* 
+## Principal: Spirit of Relevant Summarization
+- The camp catalog should prioritize clear, concise, and contextually relevant summaries of camp data, surfacing the most important details for user decision-making while allowing deeper exploration as needed.
