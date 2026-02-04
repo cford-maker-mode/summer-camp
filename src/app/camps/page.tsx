@@ -81,6 +81,37 @@ export default function CampsPage() {
   const [editForm, setEditForm] = useState<ScrapedCampData | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
+  // Google Places suggestions
+  const [placeSuggestions, setPlaceSuggestions] = useState<{ name: string; address: string; place_id: string; types: string[] }[]>([]);
+  const [placesLoading, setPlacesLoading] = useState(false);
+  const [placesDropdownOpen, setPlacesDropdownOpen] = useState(false);
+  const [placesField, setPlacesField] = useState<'name' | 'location' | null>(null);
+
+  // Debounced search for Google Places
+  useEffect(() => {
+    const query = placesField && editForm ? editForm[placesField] : '';
+    if (!query || query.length < 3) {
+      setPlaceSuggestions([]);
+      setPlacesDropdownOpen(false);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      setPlacesLoading(true);
+      try {
+        const res = await fetch(`/api/places-search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setPlaceSuggestions(data.suggestions || []);
+        setPlacesDropdownOpen((data.suggestions || []).length > 0);
+      } catch {
+        setPlaceSuggestions([]);
+        setPlacesDropdownOpen(false);
+      } finally {
+        setPlacesLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [editForm?.name, editForm?.location, placesField]);
+
   const SUMMER_ID = "summer-2026";
 
   // Load children from localStorage
@@ -222,8 +253,39 @@ export default function CampsPage() {
     });
   }
 
+  // Utility: Normalize date to YYYY-MM-DD
+  function normalizeDate(input: string): string {
+    if (!input) return "";
+    // If already ISO, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+    // Try to parse MM/DD/YYYY or M/D/YYYY
+    const parts = input.split(/[\/\-]/);
+    if (parts.length === 3) {
+      let [month, day, year] = parts;
+      if (year.length === 4 && month.length <= 2 && day.length <= 2) {
+        if (parseInt(year) > 1900 && parseInt(year) < 2100) {
+          // If year is first, swap
+          if (parseInt(month) > 1900) {
+            [year, month, day] = [month, day, year];
+          }
+          return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        }
+      }
+    }
+    // Fallback: try Date parsing
+    const d = new Date(input);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().slice(0, 10);
+    }
+    return input;
+  }
+
   function handleUpdateEditField(field: keyof ScrapedCampData, value: unknown) {
     if (!editForm) return;
+    // Normalize signupDate
+    if (field === "signupDate" && typeof value === "string") {
+      value = normalizeDate(value);
+    }
     setEditForm({ ...editForm, [field]: value });
   }
 
@@ -720,14 +782,7 @@ export default function CampsPage() {
         </Stack>
       )}
 
-      {/* Total Cost */}
-      {camps.length > 0 && (
-        <Box sx={{ mt: 3, p: 2, backgroundColor: "background.paper", borderRadius: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Estimated Total Cost: <strong>${totalCost.toLocaleString()}</strong> ({camps.length} camps)
-          </Typography>
-        </Box>
-      )}
+      {/* ...removed total cost display... */}
 
       {/* Add to Plan Dialog */}
       <Dialog
@@ -913,12 +968,41 @@ export default function CampsPage() {
             <Box sx={{ pt: 1 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Camp Name *"
-                    value={editForm.name || ""}
-                    onChange={(e) => handleUpdateEditField("name", e.target.value)}
-                  />
+                  <Box sx={{ position: 'relative' }}>
+                    <TextField
+                      fullWidth
+                      label="Camp Name *"
+                      value={editForm.name || ""}
+                      onChange={(e) => {
+                        handleUpdateEditField("name", e.target.value);
+                        setPlacesField('name');
+                      }}
+                      onFocus={() => setPlacesField('name')}
+                      onBlur={() => setTimeout(() => setPlacesDropdownOpen(false), 200)}
+                    />
+                    {placesDropdownOpen && placesField === 'name' && (
+                      <Box sx={{ position: 'absolute', zIndex: 10, top: 56, left: 0, right: 0, bgcolor: 'background.paper', border: '1px solid #ccc', borderRadius: 1, boxShadow: 2 }}>
+                        {placesLoading ? (
+                          <Box sx={{ p: 2, textAlign: 'center' }}><CircularProgress size={20} /></Box>
+                        ) : (
+                          placeSuggestions.map((place) => (
+                            <Box
+                              key={place.place_id}
+                              sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                              onMouseDown={() => {
+                                handleUpdateEditField('name', place.name);
+                                handleUpdateEditField('address', place.address);
+                                setPlacesDropdownOpen(false);
+                              }}
+                            >
+                              <Typography variant="body2">{place.name}</Typography>
+                              <Typography variant="caption" color="text.secondary">{place.address}</Typography>
+                            </Box>
+                          ))
+                        )}
+                      </Box>
+                    )}
+                  </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -936,12 +1020,41 @@ export default function CampsPage() {
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Location"
-                    value={editForm.location || ""}
-                    onChange={(e) => handleUpdateEditField("location", e.target.value)}
-                  />
+                  <Box sx={{ position: 'relative' }}>
+                    <TextField
+                      fullWidth
+                      label="Location"
+                      value={editForm.location || ""}
+                      onChange={(e) => {
+                        handleUpdateEditField("location", e.target.value);
+                        setPlacesField('location');
+                      }}
+                      onFocus={() => setPlacesField('location')}
+                      onBlur={() => setTimeout(() => setPlacesDropdownOpen(false), 200)}
+                    />
+                    {placesDropdownOpen && placesField === 'location' && (
+                      <Box sx={{ position: 'absolute', zIndex: 10, top: 56, left: 0, right: 0, bgcolor: 'background.paper', border: '1px solid #ccc', borderRadius: 1, boxShadow: 2 }}>
+                        {placesLoading ? (
+                          <Box sx={{ p: 2, textAlign: 'center' }}><CircularProgress size={20} /></Box>
+                        ) : (
+                          placeSuggestions.map((place) => (
+                            <Box
+                              key={place.place_id}
+                              sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                              onMouseDown={() => {
+                                handleUpdateEditField('location', place.name);
+                                handleUpdateEditField('address', place.address);
+                                setPlacesDropdownOpen(false);
+                              }}
+                            >
+                              <Typography variant="body2">{place.name}</Typography>
+                              <Typography variant="caption" color="text.secondary">{place.address}</Typography>
+                            </Box>
+                          ))
+                        )}
+                      </Box>
+                    )}
+                  </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -1136,7 +1249,10 @@ function CampCard({ camp, onAddToPlan, onEdit }: { camp: Camp; onAddToPlan: (cam
 
   const formatGrades = () => {
     if (camp.gradeMin === undefined && camp.gradeMax === undefined) return null;
-    const formatGrade = (g: number) => (g === 0 ? "K" : g.toString());
+    const formatGrade = (g: number | undefined | null) => {
+      if (g === undefined || g === null) return "?";
+      return g === 0 ? "K" : g.toString();
+    };
     if (camp.gradeMin !== undefined && camp.gradeMax !== undefined) {
       if (camp.gradeMin === camp.gradeMax) return `Grade ${formatGrade(camp.gradeMin)}`;
       return `Grades ${formatGrade(camp.gradeMin)}-${formatGrade(camp.gradeMax)}`;

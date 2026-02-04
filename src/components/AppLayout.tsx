@@ -17,12 +17,15 @@ import {
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  ListAlt as CampsIcon,
-  CalendarMonth as CalendarIcon,
-  AccessTime as SignupIcon,
-  DirectionsCar as LogisticsIcon,
 } from "@mui/icons-material";
+
+const iconSize = 28;
+const DashboardIcon = () => <img src="/openmoji/1F60E_color.png" alt="Dashboard" width={iconSize} height={iconSize} style={{ display: 'block' }} />;
+const TentIcon = () => <img src="/openmoji/26FA_color.png" alt="Camp Catalog" width={iconSize} height={iconSize} style={{ display: 'block' }} />;
+const CalendarIcon = () => <img src="/openmoji/1F5D3_color.png" alt="Summer Plan" width={iconSize} height={iconSize} style={{ display: 'block' }} />;
+const ClipboardIcon = () => <img src="/openmoji/E0AB_color.png" alt="Signup Tasks" width={iconSize} height={iconSize} style={{ display: 'block' }} />;
+const LogisticsIcon = () => <img src="/openmoji/1F697_color.png" alt="Logistics" width={iconSize} height={iconSize} style={{ display: 'block' }} />;
+
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -39,9 +42,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Dashboard", icon: <DashboardIcon />, href: "/dashboard", disabled: true, phase: "P2" },
-  { label: "Camps", icon: <CampsIcon />, href: "/camps" },
+  { label: "Camp Catalog", icon: <TentIcon />, href: "/camps" },
   { label: "Summer Plan", icon: <CalendarIcon />, href: "/plan" },
-  { label: "Signup Tasks", icon: <SignupIcon />, href: "/signup-tasks" },
+  { label: "Signup Tasks", icon: <ClipboardIcon />, href: "/signup-tasks" },
   { label: "Logistics", icon: <LogisticsIcon />, href: "/logistics", disabled: true, phase: "P2" },
 ];
 
@@ -92,11 +95,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
               <ListItemText primary={item.label} />
-              {item.phase && (
-                <Typography variant="caption" color="text.secondary">
-                  ({item.phase})
-                </Typography>
-              )}
+                {item.disabled && (
+                  <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                    (coming soon)
+                  </Typography>
+                )}
             </ListItemButton>
           </ListItem>
         ))}
