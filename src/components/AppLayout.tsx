@@ -63,13 +63,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           overflow: "hidden",
           height: { xs: 56, sm: 64 },
           position: "relative",
+          m: 1, // 8px margin on all sides to match sidebar spacing
+          bgcolor: "#e7e7df",
+          borderRadius: 2,
         }}
+          // Sidebar/Drawer and logo area
       >
         <Image
-          src="/logo.jpg"
+          src="/logo-itinerino.jpeg"
           alt="Summer Camp Planner"
           fill
-          style={{ objectFit: "cover", objectPosition: "center" }}
+          style={{ objectFit: "contain", objectPosition: "center" }}
           priority
         />
       </Box>
@@ -114,9 +118,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         sx={{
           width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
           ml: { sm: `${DRAWER_WIDTH}px` },
-          backgroundColor: "background.paper",
+          backgroundColor: "#f3f3ed",
           color: "text.primary",
-          boxShadow: 1,
+          boxShadow: "none",
         }}
       >
         <Toolbar>
@@ -152,6 +156,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: DRAWER_WIDTH,
+              backgroundColor: "#e7e7df",
             },
           }}
         >
@@ -165,6 +170,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: DRAWER_WIDTH,
+              backgroundColor: "#e7e7df",
             },
           }}
           open
@@ -179,7 +185,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           p: 3,
           width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
           mt: 8,
-          backgroundColor: "background.default",
+          backgroundColor: "#f3f3ed",
           minHeight: "100vh",
         }}
       >

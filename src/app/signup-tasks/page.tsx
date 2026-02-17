@@ -581,14 +581,17 @@ function TaskCard({
       else parts.push(`Up to age ${camp.ageMax}`);
     }
     if (camp?.gradeMin !== undefined || camp?.gradeMax !== undefined) {
-      const formatGrade = (g: number) => g === 0 ? "K" : g.toString();
-      if (camp.gradeMin !== undefined && camp.gradeMax !== undefined) {
+      const formatGrade = (g: number | null | undefined) => {
+        if (g === null || g === undefined) return "?";
+        return g === 0 ? "K" : g.toString();
+      };
+      if (typeof camp.gradeMin === "number" && typeof camp.gradeMax === "number") {
         if (camp.gradeMin === camp.gradeMax) parts.push(`Grade ${formatGrade(camp.gradeMin)}`);
         else parts.push(`Grades ${formatGrade(camp.gradeMin)}-${formatGrade(camp.gradeMax)}`);
-      } else if (camp.gradeMin !== undefined) {
+      } else if (typeof camp.gradeMin === "number") {
         parts.push(`Grade ${formatGrade(camp.gradeMin)}+`);
-      } else {
-        parts.push(`Up to grade ${formatGrade(camp.gradeMax!)}`);
+      } else if (typeof camp.gradeMax === "number") {
+        parts.push(`Up to grade ${formatGrade(camp.gradeMax)}`);
       }
     }
     return parts.length > 0 ? parts.join(" • ") : null;
@@ -597,7 +600,8 @@ function TaskCard({
   const formatTime = () => {
     if (camp?.overnight) return "Overnight";
     if (camp?.dailyStartTime && camp?.dailyEndTime) {
-      const formatT = (t: string) => {
+      const formatT = (t: string | null | undefined) => {
+        if (typeof t !== "string" || !t.includes(":")) return "?";
         const [h, m] = t.split(":");
         const hour = parseInt(h);
         const ampm = hour >= 12 ? "PM" : "AM";
