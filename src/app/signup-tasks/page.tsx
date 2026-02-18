@@ -44,8 +44,10 @@ import {
   Link as LinkIcon,
 } from "@mui/icons-material";
 import Link from "next/link";
-import type { ScheduledSession, SessionStatus, UrgencyLevel, SignupTask } from "@/types/summer";
-import type { Camp } from "@/types/camp";
+import type { ScheduledSession, SessionStatus, UrgencyLevel, SignupTask } from "@/user-data/types";
+import type { Camp } from "@/public-catalog/types";
+import { loadUserFavorites, loadUserSignups } from "@/user-data";
+import { loadPublicCampCatalog } from "@/public-catalog";
 
 const SUMMER_ID = "summer-2026";
 
@@ -157,25 +159,17 @@ export default function SignupTasksPage() {
   }>({ open: false, task: null, updateStatus: true });
 
   // Load data
+  // Load user data and public catalog using new modules
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [sessionsRes, campsRes] = await Promise.all([
-        fetch(`/api/summers/${SUMMER_ID}/sessions`),
-        fetch("/api/camps/list"),
-      ]);
-      
-      if (!sessionsRes.ok || !campsRes.ok) {
-        throw new Error("Failed to load data");
-      }
-      
-      const [sessionsData, campsData] = await Promise.all([
-        sessionsRes.json(),
-        campsRes.json(),
-      ]);
-      
-      setSessions(sessionsData.sessions || []);
-      setCamps(campsData.camps || []);
+      // Load user signups (sessions)
+      const userSignups = await loadUserSignups();
+      setSessions(userSignups?.signups?.map(s => s.session) || []);
+
+      // Load public camp catalog
+      const publicCatalog = await loadPublicCampCatalog();
+      setCamps(publicCatalog?.camps || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {

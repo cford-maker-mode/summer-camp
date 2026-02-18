@@ -40,7 +40,8 @@ import {
   CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
 
-import type { Camp, ScrapedCampData } from "@/types/camp";
+import type { Camp, ScrapedCampData } from "@/public-catalog/types";
+import { loadPublicCampCatalog } from "@/public-catalog";
 import { isFeatureEnabled } from "@/lib/featureFlags";
 
 export default function CampsPage() {
@@ -144,9 +145,8 @@ export default function CampsPage() {
 
   async function loadCamps() {
     try {
-      const res = await fetch("/api/camps/list");
-      const data = await res.json();
-      setCamps(data.camps || []);
+      const publicCatalog = await loadPublicCampCatalog();
+      setCamps(publicCatalog?.camps || []);
     } catch (error) {
       console.error("Failed to load camps:", error);
     } finally {

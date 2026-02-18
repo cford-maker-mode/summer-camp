@@ -1,16 +1,7 @@
-/**
- * Camp data types for the Summer Camp Planner
- * Based on the data model from product-spec.md
- */
+// Types for public camp catalog data
 
-/**
- * Cost period for camp pricing
- */
 export type CostPer = "week" | "day" | "session";
 
-/**
- * Core camp entity - represents a summer camp in the catalog
- */
 export interface RegistrationDate {
   label: string;
   date: string; // YYYY-MM-DD
@@ -41,18 +32,12 @@ export interface Camp {
   // topic?: string; // P1 feature - uncomment when ready
 }
 
-/**
- * Available session dates offered by a camp
- */
 export interface CampSession {
   label: string; // e.g., "Week 1", "Session A"
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
 }
 
-/**
- * Raw scraped data before normalization
- */
 export interface ScrapedCampData {
   name?: string;
   location?: string;
@@ -76,9 +61,6 @@ export interface ScrapedCampData {
   rawContent?: string; // Original HTML content for debugging
 }
 
-/**
- * Result from the scraping operation
- */
 export interface ScrapeResult {
   success: boolean;
   data?: ScrapedCampData;
@@ -87,19 +69,25 @@ export interface ScrapeResult {
   blocked?: boolean; // True if site appears to block automated requests
 }
 
-/**
- * Request body for the scrape API endpoint
- */
 export interface ScrapeRequest {
   url: string;
 }
 
-/**
- * Response from the scrape API endpoint
- */
 export interface ScrapeResponse {
   success: boolean;
   data?: ScrapedCampData;
   error?: string;
   blocked?: boolean; // True if site appears to block automated requests
+}
+
+export interface PublicCampCatalog {
+  version: string;
+  camps: Camp[];
+}
+
+export interface PublicCampFile {
+  version: string;
+  camp: Camp;
+  sessions: CampSession[];
+  registrationDates?: RegistrationDate[];
 }

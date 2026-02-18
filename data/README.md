@@ -1,3 +1,12 @@
+
+# Sample Data for Development
+
+This folder contains example data and templates for local development and testing only.
+
+- Do not use this data for real user storage in production.
+- All real user data should be stored in the user's own cloud storage (Google Drive, etc.) via the app's user-data module.
+- Use these files as templates or for UI testing and onboarding documentation.
+
 # Data Storage
 
 This folder contains all application data stored as Markdown files with YAML frontmatter.
@@ -11,7 +20,7 @@ This folder contains all application data stored as Markdown files with YAML fro
     session.template.md
     event.template.md
     summer.template.md
-  /2026                           # Year folder
+  /sample-2026                    # Sample year folder (development only)
     /camps                        # Camp catalog (shared across all children)
       camp-{slug}.md              # One file per camp
     /summer-{child}               # Summer plan for a specific child
@@ -39,7 +48,7 @@ This folder contains all application data stored as Markdown files with YAML fro
 
 ## Camp Catalog
 
-Camps are stored in `/data/{year}/camps/` and are **reusable across children**. A camp represents a program you've researched, not a scheduled session.
+Camps are stored in `/data/sample-2026/camps/` and are **reusable across children**. A camp represents a program you've researched, not a scheduled session.
 
 ### Camp File Structure
 
@@ -74,7 +83,7 @@ Free-form notes about this camp.
 
 ## Summer Plan
 
-Each child has their own summer plan folder: `/data/{year}/summer-{child}/`
+Each child has their own summer plan folder: `/data/sample-2026/summer-{child}/`
 
 ### Summer Metadata (`summer.md`)
 
@@ -161,4 +170,8 @@ Files can be edited:
 2. **Directly in a text editor** - For bulk changes or debugging
 3. **Via Git** - Version control tracks all changes
 
-The app reads/writes these files directly. Changes are saved immediately.
+
+The app reads/writes these files directly for development and testing. In production, all user data is stored in the user's own cloud storage, not in this folder.
+
+## Production Note
+This folder should be ignored or excluded from production deployments.
