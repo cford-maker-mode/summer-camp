@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { scrapeCampUrl, scrapeCampSite } from "@/lib/scraper";
-import type { ScrapeRequest, ScrapeResponse } from "@/types/camp";
+import type { ScrapeRequest, ScrapeResponse } from "@/public-catalog/types";
 
 interface ExtendedScrapeRequest extends ScrapeRequest {
   deep?: boolean;

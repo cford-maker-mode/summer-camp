@@ -4,7 +4,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import type { ScrapedCampData, CampSession } from "@/types/camp";
+import type { ScrapedCampData, CampSession } from "@/public-catalog/types";
 import type { CrawlResult } from "./crawler";
 import { cleanHtml, extractPatterns } from "./html-cleaner";
 

@@ -4,7 +4,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import type { ScrapedCampData, CampSession } from "@/types/camp";
+import type { ScrapedCampData, CampSession } from "@/public-catalog/types";
 import type { CleanedContent } from "./html-cleaner";
 
 const EXTRACTION_PROMPT = `You are a data extraction assistant specializing in summer camp information. 

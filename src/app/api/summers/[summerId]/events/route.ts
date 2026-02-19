@@ -9,7 +9,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import matter from "gray-matter";
 import slugify from "slugify";
-import type { FamilyEvent, EventType } from "@/types/summer";
+import type { FamilyEvent, EventType } from "@/user-data/types";
 
 // Helper to convert Date objects to YYYY-MM-DD strings
 function toDateString(val: unknown): string | undefined {

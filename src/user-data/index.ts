@@ -1,3 +1,8 @@
+// Load user signups from cloud storage (stub)
+export async function loadUserSignups(): Promise<UserSignups | null> {
+  // TODO: Implement cloud API integration
+  return null;
+}
 // User data access and storage logic
 // All read/write operations for user-owned data (favorites, signups, user profile, summer plan, sessions, events) should be implemented here.
 

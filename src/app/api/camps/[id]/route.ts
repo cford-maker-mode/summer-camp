@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import matter from "gray-matter";
-import type { ScrapedCampData } from "@/types/camp";
+import type { ScrapedCampData } from "@/public-catalog/types";
 
 interface PatchCampResponse {
   success: boolean;

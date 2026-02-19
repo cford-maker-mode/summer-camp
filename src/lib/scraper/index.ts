@@ -9,7 +9,7 @@ import { extractWithClaude } from "./extractor";
 import { crawlCampSite } from "./crawler";
 import { extractFromMultiplePages } from "./multi-page-extractor";
 import { enhanceWithAddress } from "../geocoder";
-import type { ScrapeResult, ScrapedCampData } from "@/types/camp";
+import type { ScrapeResult, ScrapedCampData } from "@/public-catalog/types";
 
 export interface ScrapeOptions {
   /** Enable multi-page crawling to gather more comprehensive data */

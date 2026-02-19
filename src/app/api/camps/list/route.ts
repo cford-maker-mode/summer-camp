@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import matter from "gray-matter";
-import type { Camp } from "@/types/camp";
+import type { Camp } from "@/public-catalog/types";
 
 export async function GET() {
   try {

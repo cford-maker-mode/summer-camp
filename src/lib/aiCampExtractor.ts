@@ -6,7 +6,7 @@
 
 
 import Anthropic from "@anthropic-ai/sdk";
-import type { ScrapedCampData } from "@/types/camp";
+import type { ScrapedCampData } from "@/public-catalog/types";
 
 
 export async function extractCampWithClaude(url: string): Promise<{ success: boolean; data?: ScrapedCampData; error?: string }> {

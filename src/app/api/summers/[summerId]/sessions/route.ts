@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import matter from "gray-matter";
-import type { ScheduledSession, SessionStatus } from "@/types/summer";
+import type { ScheduledSession, SessionStatus } from "@/user-data/types";
 
 // Helper to convert Date objects to YYYY-MM-DD strings
 function toDateString(val: unknown): string | undefined {

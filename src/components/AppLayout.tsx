@@ -29,6 +29,7 @@ const LogisticsIcon = () => <img src="/openmoji/1F697_color.png" alt="Logistics"
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import AuthButton from "./AuthButton";
 
 const DRAWER_WIDTH = 240;
 
@@ -139,6 +140,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Typography variant="body2" sx={{ ml: 2, color: "text.secondary" }}>
             2026
           </Typography>
+          <Box sx={{ ml: 2 }}>
+            <AuthButton />
+          </Box>
         </Toolbar>
       </AppBar>
       <Box

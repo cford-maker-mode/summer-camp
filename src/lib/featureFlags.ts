@@ -3,6 +3,7 @@
 
 export type FeatureFlags = {
   aiWebScraper: boolean;
+  aiCampExtractor: boolean;
   // Add more feature flags here
 };
 

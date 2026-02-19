@@ -45,7 +45,7 @@ export interface ScrapedCampData {
   cost?: number | string;      // Minimum/single cost
   costMax?: number | string;   // Maximum cost (for ranges)
   costPer?: string;
-  url: string;
+  url?: string;
   ageMin?: number | string;
   ageMax?: number | string;
   gradeMin?: number | string;  // Grade level (alternative to age)

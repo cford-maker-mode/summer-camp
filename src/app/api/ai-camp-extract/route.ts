@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { extractCampWithClaude } from "@/lib/aiCampExtractor";
-import type { ScrapedCampData } from "@/types/camp";
+import type { ScrapedCampData } from "@/public-catalog/types";
 
 export async function POST(request: NextRequest) {
   try {

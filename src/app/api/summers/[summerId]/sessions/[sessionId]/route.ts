@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import matter from "gray-matter";
-import type { SessionStatus } from "@/types/summer";
+import type { SessionStatus } from "@/user-data/types";
 
 function getSessionsDir(summerId: string): string {
   const parts = summerId.split("-");

@@ -2,7 +2,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  turbopack: {},
   // Enable experimental features if needed
   webpack(config) {
     config.module.rules.push({

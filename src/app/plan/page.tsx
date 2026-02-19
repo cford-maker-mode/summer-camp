@@ -49,8 +49,8 @@ import {
   Person,
   NightsStay,
 } from "@mui/icons-material";
-import type { FamilyEvent, ScheduledSession, EventType, SessionStatus } from "@/types/summer";
-import type { Camp } from "@/types/camp";
+import type { FamilyEvent, ScheduledSession, EventType, SessionStatus } from "@/user-data/types";
+import type { Camp } from "@/public-catalog/types";
 
 // Color palette for events and sessions
 const COLORS = {

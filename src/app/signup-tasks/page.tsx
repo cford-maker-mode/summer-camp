@@ -163,9 +163,11 @@ export default function SignupTasksPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Load user signups (sessions)
-      const userSignups = await loadUserSignups();
-      setSessions(userSignups?.signups?.map(s => s.session) || []);
+      // Load sessions from API (ScheduledSession[])
+      const sessionsRes = await fetch(`/api/summers/${SUMMER_ID}/sessions`);
+      if (!sessionsRes.ok) throw new Error("Failed to load sessions");
+      const sessionsData = await sessionsRes.json();
+      setSessions(sessionsData.sessions || []);
 
       // Load public camp catalog
       const publicCatalog = await loadPublicCampCatalog();

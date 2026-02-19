@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import { generateCampMarkdown, getCampFilePath } from "@/lib/markdown";
-import type { ScrapedCampData } from "@/types/camp";
+import type { ScrapedCampData } from "@/public-catalog/types";
 
 interface SaveCampRequest extends ScrapedCampData {
   year?: number;

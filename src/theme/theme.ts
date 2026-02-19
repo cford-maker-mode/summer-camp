@@ -25,7 +25,7 @@ const theme = createTheme({
       main: "#ed6c02",
     },
     background: {
-      default: "#f3f3ed",
+      default: "#f5f5f5",
       paper: "#ffffff",
       // page background & AppBar
       // cards, modules, dialogs, menus

@@ -30,7 +30,7 @@ import {
   Radio,
   Snackbar,
 } from "@mui/material";
-import type { SessionStatus } from "@/types/summer";
+import type { SessionStatus } from "@/user-data/types";
 import {
   Add as AddIcon,
   ExpandMore as ExpandMoreIcon,
@@ -89,7 +89,7 @@ export default function CampsPage() {
   const [placeSuggestions, setPlaceSuggestions] = useState<{ name: string; address: string; place_id: string; types: string[] }[]>([]);
   const [placesLoading, setPlacesLoading] = useState(false);
   const [placesDropdownOpen, setPlacesDropdownOpen] = useState(false);
-  const [placesField, setPlacesField] = useState<'name' | 'location' | null>(null);
+  const [placesField, setPlacesField] = useState<'name' | 'location' | 'manual-location' | null>(null);
 
   // Debounced search for Google Places
   useEffect(() => {
@@ -165,7 +165,7 @@ export default function CampsPage() {
 
     try {
       let res, data;
-      if (isFeatureEnabled("aiCampExtractor")) {
+      if (isFeatureEnabled("aiWebScraper")) {
         res = await fetch("/api/ai-camp-extract", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -585,7 +585,6 @@ export default function CampsPage() {
                       fullWidth
                       label="Cost (min)"
                       inputMode="numeric"
-                      pattern="[0-9]*"
                       value={scrapedData?.cost || ""}
                       onChange={(e) => {
                         const val = parseInt(e.target.value) || undefined;
@@ -606,7 +605,6 @@ export default function CampsPage() {
                       fullWidth
                       label="Cost (max)"
                       inputMode="numeric"
-                      pattern="[0-9]*"
                       placeholder="if range"
                       value={scrapedData?.costMax || ""}
                       onChange={(e) => {
@@ -1169,7 +1167,6 @@ export default function CampsPage() {
                     fullWidth
                     label="Cost (min)"
                     inputMode="numeric"
-                    pattern="[0-9]*"
                     value={editForm.cost || ""}
                     onChange={(e) => handleUpdateEditField("cost", parseInt(e.target.value) || undefined)}
                     InputProps={{
@@ -1182,7 +1179,6 @@ export default function CampsPage() {
                     fullWidth
                     label="Cost (max)"
                     inputMode="numeric"
-                    pattern="[0-9]*"
                     value={editForm.costMax || ""}
                     onChange={(e) => handleUpdateEditField("costMax", e.target.value === "" ? undefined : parseInt(e.target.value))}
                     InputProps={{

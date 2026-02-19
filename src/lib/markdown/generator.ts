@@ -4,7 +4,7 @@
  */
 
 import slugify from "slugify";
-import type { ScrapedCampData, Camp, CampSession } from "@/types/camp";
+import type { ScrapedCampData, Camp, CampSession } from "@/public-catalog/types";
 
 /**
  * Generate a slug from camp name for use in filename and ID
