@@ -82,7 +82,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           priority
         />
       </Box>
-      <Divider />
       <List>
         {navItems.map((item) => (
           <ListItem key={item.label} disablePadding>
@@ -108,11 +107,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
               <ListItemText primary={item.label} />
-                {item.disabled && (
-                  <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                    (coming soon)
-                  </Typography>
-                )}
             </ListItemButton>
           </ListItem>
         ))}

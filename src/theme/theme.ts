@@ -70,7 +70,10 @@ const theme = createTheme({
         root: {
           textTransform: "none",
           fontWeight: 500,
-          color: '#fff', // Ensure white text for contrast
+          color: '#212121', // Default dark text for all buttons
+        },
+        containedPrimary: {
+          color: '#fff', // Explicit override for primary contained buttons
         },
       },
     },
