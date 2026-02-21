@@ -5,11 +5,11 @@ import { createTheme } from "@mui/material/styles";
 // Summer Camp Planner theme based on product spec
 const theme = createTheme({
   palette: {
-    primary: {
-      main: "#5BA9A4", // Teal
-      light: "#7DBDB9",
-      dark: "#478985",
-    },
+        primary: {
+          main: "#A05A2C", // Rustic Brown
+          light: "#C98A5C",
+          dark: "#6B3A18",
+        },
     secondary: {
       main: "#ffc107", // Amber
       light: "#ffca28",
@@ -70,6 +70,7 @@ const theme = createTheme({
         root: {
           textTransform: "none",
           fontWeight: 500,
+          color: '#fff', // Ensure white text for contrast
         },
       },
     },

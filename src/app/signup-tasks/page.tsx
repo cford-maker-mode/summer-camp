@@ -311,7 +311,7 @@ export default function SignupTasksPage() {
   if (tasks.length === 0) {
     return (
       <Box>
-        <Typography variant="h4" sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ mb: 3, textAlign: 'center' }}>
           Signup Tasks
         </Typography>
         

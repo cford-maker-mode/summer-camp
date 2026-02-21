@@ -453,7 +453,7 @@ export default function SummerPlanPage() {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>
+      <Typography variant="h4" sx={{ mb: 3, textAlign: 'center' }}>
         Summer Plan
       </Typography>
 

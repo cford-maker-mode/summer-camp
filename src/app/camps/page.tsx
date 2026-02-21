@@ -29,6 +29,7 @@ import {
   RadioGroup,
   Radio,
   Snackbar,
+  Tooltip,
 } from "@mui/material";
 import type { SessionStatus } from "@/user-data/types";
 import {
@@ -38,6 +39,7 @@ import {
   Link as LinkIcon,
   Edit as EditIcon,
   CalendarToday as CalendarIcon,
+  InfoOutlined,
 } from "@mui/icons-material";
 
 import type { Camp, ScrapedCampData } from "@/public-catalog/types";
@@ -354,13 +356,34 @@ export default function CampsPage() {
 
   return (
     <Box>
-      <Typography variant="h1" gutterBottom>
+      <Typography variant="h1" gutterBottom sx={{ textAlign: 'center' }}>
         Camp Catalog
       </Typography>
-
-      <Typography variant="body1" sx={{ mb: 3 }}>
-        Find summer camps recommended by the community, and add new options by sharing the specific camp session page you’re interested in. Add camps to your Plan to visualize your summer at a glance.
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2,
+          mb: 3,
+          maxWidth: 600,
+          mx: 'auto',
+        }}
+      >
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <img src="/openmoji/1F60E_color.png" alt="Explore" width={24} height={24} style={{ filter: 'grayscale(100%)', verticalAlign: 'middle' }} />
+          Find and explore camps
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <img src="/openmoji/26FA_color.png" alt="Add" width={24} height={24} style={{ filter: 'grayscale(100%)', verticalAlign: 'middle' }} />
+          Add camps to the catalog
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <img src="/openmoji/1F5D3_color.png" alt="Plan" width={24} height={24} style={{ filter: 'grayscale(100%)', verticalAlign: 'middle' }} />
+          Save camps to your plan
+        </Typography>
+      </Box>
 
       {/* Add Camp Panel */}
       <Card sx={{ mb: 3 }}>
@@ -784,17 +807,35 @@ export default function CampsPage() {
       </Card>
 
       {/* Filters */}
-      <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center" }}>
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Sort</InputLabel>
-          <Select value={sortBy} label="Sort" onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
-            <MenuItem value="name">Name</MenuItem>
-            <MenuItem value="signup">Signup Date</MenuItem>
-          </Select>
-        </FormControl>
-        <Typography variant="body2" color="text.secondary">
-          {camps.length} camps
-        </Typography>
+      <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center", justifyContent: "space-between" }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Sort</InputLabel>
+            <Select value={sortBy} label="Sort" onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
+              <MenuItem value="name">Name</MenuItem>
+              <MenuItem value="signup">Signup Date</MenuItem>
+            </Select>
+          </FormControl>
+          <Typography variant="body2" color="text.secondary">
+            {camps.length} camps
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant="body2" color="warning.main" sx={{ fontWeight: 500, mr: 1 }}>
+            Double-check important details
+          </Typography>
+          <Tooltip
+            title={
+              'This catalog is built by the community and supported by AI. Some details may be out of date or incomplete. Please check the source before making plans, and help keep things accurate for everyone.'
+            }
+            placement="top"
+            arrow
+          >
+            <IconButton size="small" sx={{ p: 0 }}>
+              <InfoOutlined color="warning" fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {/* Camp List */}

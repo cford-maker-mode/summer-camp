@@ -62,18 +62,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Box
         sx={{
           overflow: "hidden",
-          height: { xs: 56, sm: 64 },
+          height: { xs: 48, sm: 56 }, // Midpoint logo height
+          width: { xs: 140, sm: 160 }, // Midpoint logo width
           position: "relative",
-          m: 1, // 8px margin on all sides to match sidebar spacing
+          m: 1,
           bgcolor: "#e7e7df",
           borderRadius: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
-          // Sidebar/Drawer and logo area
       >
         <Image
           src="/logo-itinerino.jpeg"
           alt="Summer Camp Planner"
-          fill
+          width={140}
+          height={48}
           style={{ objectFit: "contain", objectPosition: "center" }}
           priority
         />
@@ -89,6 +93,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               disabled={item.disabled}
               sx={{
                 opacity: item.disabled ? 0.5 : 1,
+                borderRadius: "999px", // Fully rounded corners for pill look
+                margin: "4px 8px", // Spacing between pills
+                padding: "8px 16px",
+                transition: "background-color 0.2s",
                 "&.Mui-selected": {
                   backgroundColor: "primary.light",
                   color: "primary.contrastText",
