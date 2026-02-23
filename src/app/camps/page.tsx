@@ -46,21 +46,31 @@ import { isFeatureEnabled } from "@/lib/featureFlags";
 
 import { useCamps } from "@/hooks/useCamps";
 import CampList from "@/components/CampList";
+import NoCampsPanel from "@/components/NoCampsPanel";
 import CampDetails from "@/components/CampDetails";
 import CampForm from "@/components/CampForm";
+import AddCampPanel from "@/components/AddCampPanel";
+import CampFiltersBar from "@/components/CampFiltersBar";
 import AddCampDialog from "@/components/AddCampDialog";
+import AddToPlanDialog from "@/components/AddToPlanDialog";
+import EditCampDialog from "@/components/EditCampDialog";
+import SnackbarFeedback from "@/components/SnackbarFeedback";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import ScrapeErrorDialog from "@/components/ScrapeErrorDialog";
 
 export default function CampsPage() {
+  // State and handlers
   const { camps, loading, error, setCamps } = useCamps();
-  const [selectedCamp, setSelectedCamp] = React.useState<Camp | null>(null);
-  const [addDialogOpen, setAddDialogOpen] = React.useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [scrapeErrorDialogOpen, setScrapeErrorDialogOpen] = React.useState(false);
+  const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
+  const [filters, setFilters] = useState<{ sort: string }>({ sort: "name" });
+  const [addPanelOpen, setAddPanelOpen] = useState(false);
+  const [addToPlanDialogOpen, setAddToPlanDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [scrapeErrorDialogOpen, setScrapeErrorDialogOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
-  const SUMMER_ID = "summer-2026";
-
+  // Load camps on mount
   useEffect(() => {
     loadCamps();
   }, []);
@@ -70,57 +80,98 @@ export default function CampsPage() {
       const publicCatalog = await loadPublicCampCatalog();
       setCamps(publicCatalog?.camps || []);
     } catch (error) {
-      console.error("Failed to load camps:", error);
-    } finally {
-      setLoading(false);
+      setSnackbar({ open: true, message: "Failed to load camps", severity: "error" });
     }
   }
 
-  const handleAddCamp = (campData) => {
-    // Add new camp to camps state
-    setCamps(prev => [...prev, { ...campData, id: `camp-${Date.now()}` }]);
-    setAddDialogOpen(false);
+  // Handler: Add camp (from AddCampPanel)
+  const handleAddCamp = (camp: Camp) => {
+    setCamps(prev => [...prev, camp]);
+    setAddPanelOpen(false);
+    setSnackbar({ open: true, message: "Camp added!", severity: "success" });
   };
 
+  // Handler: Edit camp
+  const handleEditCamp = (campData: Camp) => {
+    setCamps(prev => prev.map(c => c.id === campData.id ? { ...c, ...campData } : c));
+    setSelectedCamp(campData);
+    setEditDialogOpen(false);
+    setSnackbar({ open: true, message: "Camp updated!", severity: "success" });
+  };
+
+  // Handler: Delete camp
   const handleDeleteCamp = () => {
-    // Delete selected camp
     if (selectedCamp) {
       setCamps(prev => prev.filter(c => c.id !== selectedCamp.id));
       setSelectedCamp(null);
       setDeleteDialogOpen(false);
+      setSnackbar({ open: true, message: "Camp deleted!", severity: "info" });
     }
   };
 
-  const handleAddToPlan = (camp) => {
-    // Placeholder: Add camp to user's plan
-    alert(`Added ${camp.name} to plan!`);
+  // Handler: Add to plan
+  const handleAddToPlan = (camp: Camp) => {
+    setAddToPlanDialogOpen(true);
+    setSelectedCamp(camp);
   };
 
-  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  // Handler: Confirm add to plan
+  const handleConfirmAddToPlan = () => {
+    setAddToPlanDialogOpen(false);
+    setSnackbar({ open: true, message: `Added ${selectedCamp?.name} to plan!`, severity: "success" });
+  };
 
-  const handleEdit = (camp) => {
+  // Handler: Edit dialog
+  const handleEdit = (camp: Camp) => {
     setSelectedCamp(camp);
     setEditDialogOpen(true);
   };
 
-  const handleEditCamp = (campData) => {
-    setCamps(prev => prev.map(c => c.id === campData.id ? { ...c, ...campData } : c));
-    setSelectedCamp(campData);
-    setEditDialogOpen(false);
+  // Handler: Delete dialog
+  const handleDelete = (camp: Camp) => {
+    setSelectedCamp(camp);
+    setDeleteDialogOpen(true);
   };
 
-  const handleScrapeError = (error) => {
+  // Handler: Scrape error
+  const handleScrapeError = (error: unknown) => {
     setScrapeErrorDialogOpen(true);
+    setSnackbar({ open: true, message: "Scrape error occurred", severity: "error" });
   };
+
+  // Handler: Snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
+  // Handler: Filter change
+  const handleFilterChange = (newFilters: Partial<{ sort: string }>) => {
+    setFilters(prev => ({ ...prev, ...newFilters, sort: newFilters.sort ?? prev.sort }));
+  };
+
+  // Filter camps (placeholder, implement actual filtering logic)
+  const filteredCamps = camps; // TODO: apply filters
 
   return (
     <Box>
-      <Typography variant="h4">Camps</Typography>
+      <Typography variant="h4" align="center" sx={{ mb: 2 }}>Camp Catalog</Typography>
+      <CampFiltersBar
+        sort={filters.sort || "name"}
+        onSortChange={(e: React.ChangeEvent<{ value: string }>) => setFilters({ ...filters, sort: e.target.value })}
+        campCount={filteredCamps.length}
+      />
+      <AddCampPanel
+        open={addPanelOpen}
+        onClose={() => setAddPanelOpen(false)}
+        onCampAdded={handleAddCamp}
+      />
       {loading ? (
         <CircularProgress />
+      ) : filteredCamps.length === 0 ? (
+        <NoCampsPanel onAddCamp={() => setAddPanelOpen(true)} />
       ) : (
         <CampList
-          camps={camps}
+          camps={filteredCamps}
           onSelect={setSelectedCamp}
           selectedCampId={selectedCamp?.id}
           onAddToPlan={handleAddToPlan}
@@ -128,17 +179,20 @@ export default function CampsPage() {
         />
       )}
       <CampDetails camp={selectedCamp} />
-      <Button onClick={() => setAddDialogOpen(true)}>Add Camp</Button>
-      <AddCampDialog
-        open={addDialogOpen}
-        onClose={() => setAddDialogOpen(false)}
-        onAdd={handleAddCamp}
-      />
-      <CampForm
+      {/* AddCampDialog removed, handled by AddCampPanel */}
+      <EditCampDialog
         open={editDialogOpen}
         camp={selectedCamp}
-        onClose={() => setEditDialogOpen(false)}
-        onSave={handleEditCamp}
+        onSave={() => handleEditCamp(selectedCamp as Camp)}
+        onDelete={handleDeleteCamp}
+        onCancel={() => setEditDialogOpen(false)}
+      />
+      <AddToPlanDialog
+        open={addToPlanDialogOpen}
+        camp={selectedCamp}
+        onAdd={handleConfirmAddToPlan}
+        onCancel={() => setAddToPlanDialogOpen(false)}
+        children={null}
       />
       <DeleteConfirmDialog
         open={deleteDialogOpen}
@@ -151,111 +205,13 @@ export default function CampsPage() {
         error={error}
         onClose={() => setScrapeErrorDialogOpen(false)}
       />
+      <SnackbarFeedback
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={handleSnackbarClose}
+      />
     </Box>
   );
 }
-
-function CampCard({ camp, onAddToPlan, onEdit }: { camp: Camp; onAddToPlan: (camp: Camp) => void; onEdit: (camp: Camp) => void }) {
-  const formatCost = () => {
-    if (!camp.cost) return null;
-    const per = camp.costPer || "week";
-    if (camp.costMax && camp.costMax !== camp.cost) {
-      return `$${camp.cost}-$${camp.costMax}/${per}`;
-    }
-    return `$${camp.cost}/${per}`;
-  };
-
-  const formatAges = () => {
-    if (!camp.ageMin && !camp.ageMax) return null;
-    if (camp.ageMin && camp.ageMax) return `Ages ${camp.ageMin}-${camp.ageMax}`;
-    if (camp.ageMin) return `Ages ${camp.ageMin}+`;
-    return `Up to age ${camp.ageMax}`;
-  };
-
-  const formatGrades = () => {
-    if ((camp.gradeMin === undefined || camp.gradeMin === null) && (camp.gradeMax === undefined || camp.gradeMax === null)) return null;
-    const formatGrade = (g: number | undefined | null) => {
-      if (g === undefined || g === null) return "?";
-      return g === 0 ? "K" : g.toString();
-    };
-    if (camp.gradeMin !== undefined && camp.gradeMin !== null && camp.gradeMax !== undefined && camp.gradeMax !== null) {
-      if (camp.gradeMin === camp.gradeMax) return `Grade ${formatGrade(camp.gradeMin)}`;
-      return `Grades ${formatGrade(camp.gradeMin)}-${formatGrade(camp.gradeMax)}`;
-    }
-    if (camp.gradeMin !== undefined && camp.gradeMin !== null) return `Grade ${formatGrade(camp.gradeMin)}+`;
-    if (camp.gradeMax !== undefined && camp.gradeMax !== null) return `Up to grade ${formatGrade(camp.gradeMax)}`;
-    return null;
-  };
-
-  const formatEligibility = () => {
-    const grades = formatGrades();
-    const ages = formatAges();
-    // Prefer grades if available, fallback to ages
-    return grades || ages;
-  };
-
-  // Show all registration dates as labeled chips
-  const now = new Date();
-  const registrationDates = camp.registrationDates || [];
-  const getSignupChip = (rd: { label: string; date: string }) => {
-    if (!rd.date) return null;
-    const date = new Date(rd.date + "T00:00:00");
-    const daysUntil = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    let label = rd.label ? `${rd.label}: ` : "Signup: ";
-    if (daysUntil < 0) label += "passed";
-    else if (daysUntil === 0) label += "TODAY!";
-    else if (daysUntil <= 7) label += `in ${daysUntil} days`;
-    else label += date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    const isSoon = daysUntil >= 0 && daysUntil <= 7;
-    return (
-      <Chip
-        key={rd.label + rd.date}
-        icon={<CalendarIcon />}
-        label={label}
-        size="small"
-        color={isSoon ? "warning" : "default"}
-        sx={{ mr: 0.5, mb: 0.5 }}
-      />
-    );
-  };
-
-  return (
-    <Card>
-      <CardContent>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-              <Typography variant="h6">{camp.name}</Typography>
-            </Box>
-
-            <Typography variant="body2" color="text.secondary">
-              {[camp.location, formatEligibility()].filter(Boolean).join(" • ")}
-            </Typography>
-
-            {camp.address && (
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
-                📍 {camp.address}
-              </Typography>
-            )}
-
-            <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
-              {formatCost() && <Chip label={formatCost()} size="small" />}
-              {registrationDates.map(getSignupChip)}
-            </Box>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button size="small" variant="outlined" onClick={() => onAddToPlan(camp)}>
-              Add to Plan
-            </Button>
-            <IconButton size="small" onClick={() => onEdit(camp)}>
-              <EditIcon />
-            </IconButton>
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-}
-
-
+// ...existing code...
