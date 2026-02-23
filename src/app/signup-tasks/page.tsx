@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 
 /**
  * Signup Tasks Page - Deadline tracking for camp enrollments
@@ -46,7 +47,7 @@ import {
 import Link from "next/link";
 import type { ScheduledSession, SessionStatus, UrgencyLevel, SignupTask } from "@/user-data/types";
 import type { Camp } from "@/public-catalog/types";
-import { loadUserFavorites, loadUserSignups } from "@/user-data";
+import { loadUserFavorites } from "@/user-data";
 import { loadPublicCampCatalog } from "@/public-catalog";
 
 const SUMMER_ID = "summer-2026";

@@ -1,3 +1,4 @@
+import React from "react";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import ThemeRegistry from "@/components/ThemeRegistry";
 import AuthProvider from "@/components/AuthProvider";
